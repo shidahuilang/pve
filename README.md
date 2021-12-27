@@ -29,3 +29,8 @@ bash -c  "$(curl -fsSL https://ghproxy.com/https://raw.githubusercontent.com/shi
 ```sh
 bash -c  "$(curl -fsSL https://ghproxy.com/https://raw.githubusercontent.com/shidahuilang/pve/main/pvehy.sh)"
 ```
+
+- ### PVE升级系统
+```sh
+apt update && apt dist-upgrade -y
+```
