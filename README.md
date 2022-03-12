@@ -29,6 +29,10 @@ bash -c  "$(curl -fsSL https://ghproxy.com/https://raw.githubusercontent.com/shi
 ```sh
 bash -c  "$(curl -fsSL https://ghproxy.com/https://raw.githubusercontent.com/shidahuilang/pve/main/pvehy.sh)"
 ```
+- ### PVE一键可视化脚本
+```sh
+bash -c  "$(curl -fsSL https://ghproxy.com/https://raw.githubusercontent.com/shidahuilang/pve/main/PVEauto.sh)"
+```
 
 - ### PVE升级系统
 ```sh
