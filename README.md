@@ -1,17 +1,21 @@
 # pve
 
-#
-- 为防止系统没安装curl，使用不了一键命令，使用下面的一键命令之前先执行一次安装curl命令
-#
-
-- 使用root用户登录ubuntu或者debian系统，后执行以下命令安装curl
+- 进入服务器后,切换到root用户,下面命令一般都切进入root用户,如果不行请自行百度
 ```sh
-apt -y update && apt -y install curl
+sudo -i || su - root
 ```
 
-- 使用root用户登录centos系统，后执行以下命令安装curl
+- 如果您服务器本身是没密码的,比如谷歌云，甲骨云这些，请设置密码
 ```sh
-yum install -y curl
+echo root:你想要设置的密码 |chpasswd root
+
+比如：
+echo root:adminadmin |chpasswd root
+```
+
+- 为防止系统没安装curl，使用不了一键命令，使用下面的一键命令之前先执行一次安装curl命令
+```sh
+apt -y update && apt -y install curl || yum install -y curl || apk add curl bash
 ```
 
 - 使用root用户登录alpine系统，后执行以下命令安装curl
