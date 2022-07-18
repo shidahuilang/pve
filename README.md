@@ -23,7 +23,10 @@ apt -y update && apt -y install curl || yum install -y curl || apk add curl bash
 apk add curl bash
 ```
 #
-
+PVE温度硬盘显示
+```sh
+bash -c  "$(curl -fsSL https://ghproxy.com/https://raw.githubusercontent.com/shidahuilang/pve/main/PVE%E6%98%BE%E7%A4%BA%E6%B8%A9%E5%BA%A6%E7%AD%89.sh)"
+```
 - ### (centos、ubuntu、debian、alpine)一键开启SSH
 ```sh
 bash -c  "$(curl -fsSL https://ghproxy.com/https://raw.githubusercontent.com/shidahuilang/pve/main/ssh.sh)"
