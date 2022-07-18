@@ -23,14 +23,14 @@ EOF
 
 # 对比容器停止列表
 docker=`grep -Fxvf /var/tmp/docker.md /var/tmp/dockerlist.md`
-#dockers=`echo $docker | sed 's/ /、/g'`;echo $dockers
+dockers=`echo $docker | sed 's/ /、/g'`;echo $dockers
 
 # 如果变量有效就发送通知
 
-if [ -n "$docker" ]; then  curl "http://xxxx:xx/push?token=dahuilang&message=🚫容器意外停止，停止列表：$docker......"; else curl "http://xxxx:xx/push?token=dahuilang&message=🎉所有容器运行正常......"; fi
+if [ -n "$docker" ]; then  curl "http://xxxx:xx/push?token=dahuilang&message=🚫容器意外停止，停止列表：$dockers......"; else curl "http://xxxx:xx/push?token=dahuilang&message=🎉所有容器运行正常......"; fi
 
 # 容器出问题才发消息
-# if [ -n "$docker" ]; then  curl "http://xxxx:xx/push?token=dahuilang&message=🚫容器意外停止，停止列表：$docker";fi
+# if [ -n "$docker" ]; then  curl "http://xxxx:xx/push?token=dahuilang&message=🚫容器意外停止，停止列表：$dockers";fi
 # if [ -n "$docker" ]; then  curl "https://api-telegram.workers.dev/bot1622585953:AAxxccff/sendMessage" -d "chat_id=12345678&text=🚫容器意外停止，停止列表:$dockers......"; else curl "https://api-telegram.workers.dev/bot12345:AAGeQmivyLJjVC5xxcc/sendMessage" -d "chat_id=12345678&text=🎉所有容器运行正常......"; fi
 
 # 删除对比更新目录列表
