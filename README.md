@@ -23,15 +23,8 @@ sed -i "s/.*PermitRootLogin.*/PermitRootLogin yes/g"   /etc/ssh/sshd_config && s
 ```sh
 bash -c  "$(curl -fsSL https://ghproxy.com/https://raw.githubusercontent.com/shidahuilang/pve/main/ssh.sh)"
 ```
----
-- ### PVE一键开启换源，去掉订阅
-```sh
-bash -c  "$(curl -fsSL https://ghproxy.com/https://raw.githubusercontent.com/shidahuilang/pve/main/pvehy.sh)"
-```
-- ### PVE一键可视化脚本
-```sh
-bash -c  "$(curl -fsSL https://ghproxy.com/https://raw.githubusercontent.com/shidahuilang/pve/main/PVEauto.sh)"
-```
+
+
 
 - ### PVE升级系统
 ```sh
