@@ -104,10 +104,8 @@ cat > $tmpf << 'EOF'
 			  return `CPU风扇: ${fan1} RPM | 系统风扇: ${fan2} RPM `
             }
 	},
-	// 检测不到相关参数的可以注释掉---需要的注释本行即可  */
-
-	   检测不到相关参数的可以注释掉---需要的注释本行即可
-	   NVME硬盘温度
+	/* 检测不到相关参数的可以注释掉---需要的注释本行即可
+	// NVME硬盘温度
 	{
           itemId: 'nvme_ssd-temperatures',
           colspan: 2,
