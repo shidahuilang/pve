@@ -10,7 +10,7 @@ apt -y update && apt -y install curl || yum install -y curl || apk add curl bash
 ```sh
 apk add curl bash
 ```
-- ###J4125开启直通
+- ### J4125开启直通
 ```sh
 bash -c  "$(curl -fsSL https://raw.githubusercontent.com/shidahuilang/pve/main/J4125%E5%BC%80%E5%90%AF%E7%9B%B4%E9%80%9A.sh)"
 ```
