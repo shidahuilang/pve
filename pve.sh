@@ -310,9 +310,9 @@ enable_pass(){
 		menu
 	fi
 	if [ `cat /proc/cpuinfo|grep Intel|wc -l` = 0 ];then
-		iommu="amd_iommu=on iommu=pt video=efifb:off"
+		iommu="amd_iommu=on"
 	else
-		iommu="intel_iommu=on iommu=pt video=efifb:off"
+		iommu="intel_iommu=on"
 	fi
 	if [ `grep $iommu /etc/default/grub|wc -l` = 0 ];then
 		sed -i 's|quiet|quiet '$iommu'|' /etc/default/grub
