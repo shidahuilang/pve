@@ -36,7 +36,7 @@ rm /tmp/sensors
 echo 备份源文件
 pvever=$(pveversion | awk -F"/" '{print $2}')
 echo pve版本$pvever
-[ ! -e $nodes.$pvever.bak ] && cp $nodes $nodes.$pvever.bak || { echo 已经修改过，请务重复执行; exit 1;}
+[ ! -e $nodes.$pvever.bak ] && cp $nodes $nodes.$pvever.bak || { echo 已经修改过，请勿重复执行; exit 1;}
 [ ! -e $pvemanagerlib.$pvever.bak ] && cp $pvemanagerlib $pvemanagerlib.$pvever.bak
 [ ! -e $proxmoxlib.$pvever.bak ] && cp $proxmoxlib $proxmoxlib.$pvever.bak
 
