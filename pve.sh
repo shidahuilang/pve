@@ -647,8 +647,8 @@ EOF
 		menu
 	;;
 	4)
-		echo
-		echo " 敬请期待！"
+		
+		cpu_core
 		echo
 		pause
 		menu
