@@ -14,10 +14,6 @@ docker=$(docker ps -a | grep Exited) && dockerstop=$(awk '{print $(2)}' <<<${doc
 
 #排除项目
 cat >> /var/tmp/docker.md <<EOF
-rubyangxg/jd-qinglong
-adguard/adguardhome:latest
-oldiy/dosgame-web-docker:latest
-johngong/qbittorrent:latest
 hectorqin/reader
 EOF
 
