@@ -14,7 +14,7 @@ echo vfio_pci >> /etc/modules
 echo vfio_virqfd >> /etc/modules
 echo kvmgt >> /etc/modules
 fi
-
+touch /etc/modprobe.d/blacklist.conf
 grep "blacklist" /etc/modprobe.d/blacklist.conf >/dev/null
 if [ $? -eq 1 ]; then
 echo "blacklist snd_hda_intel" >> /etc/modprobe.d/blacklist.conf 
@@ -26,6 +26,10 @@ grep "vfio" /etc/modprobe.d/vfio.conf >/dev/null
 if [ $? -eq 1 ]; then
 echo "options vfio-pci ids=8086:3185" >> /etc/modprobe.d/vfio.conf
 fi
+
 update-initramfs -u
 update-grub
+
+
+
 
