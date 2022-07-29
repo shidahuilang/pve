@@ -305,9 +305,9 @@ enable_pass(){
 		TIME r "您的硬件不支持直通！"
 	fi
 	if [ `cat /proc/cpuinfo|grep Intel|wc -l` = 0 ];then
-		iommu="amd_iommu=on"
+		iommu="amd_iommu=on iommu=pt video=efifb:off"
 	else
-		iommu="intel_iommu=on"
+		iommu="intel_iommu=on iommu=pt video=efifb:off"
 	fi
 	if [ `grep $iommu /etc/default/grub|wc -l` = 0 ];then
 		sed -i 's|quiet|quiet '$iommu'|' /etc/default/grub
