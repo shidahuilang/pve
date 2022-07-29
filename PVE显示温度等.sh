@@ -92,18 +92,18 @@ cat > $tmpf << 'EOF'
 
 	// /* 检测不到相关参数的可以注释掉---需要的注释本行即可
 	// 风扇转速
-	{
-          itemId: 'RPM',
-          colspan: 2,
-          printBar: false,
-          title: gettext('CPU风扇'),
-          textField: 'thermalstate',
-          renderer:function(value){
-			  const fan1 = value.match(/fan1:.*?\ ([\d.]+) R/)[1];
-			  const fan2 = value.match(/fan2:.*?\ ([\d.]+) R/)[1];
-			  return `CPU风扇: ${fan1} RPM | 系统风扇: ${fan2} RPM `
-            }
-	},
+	//{
+       //   itemId: 'RPM',
+       //   colspan: 2,
+       //   printBar: false,
+       //   title: gettext('CPU风扇'),
+       //   textField: 'thermalstate',
+       //   renderer:function(value){
+	//		  const fan1 = value.match(/fan1:.*?\ ([\d.]+) R/)[1];
+	//		  const fan2 = value.match(/fan2:.*?\ ([\d.]+) R/)[1];
+	//		  return `CPU风扇: ${fan1} RPM | 系统风扇: ${fan2} RPM `
+       //     }
+	//},
 	// 检测不到相关参数的可以注释掉---需要的注释本行即可  */
 
 	/* 检测不到相关参数的可以注释掉---需要的注释本行即可
