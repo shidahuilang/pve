@@ -25,12 +25,7 @@ fi
 grep "vfio" /etc/modprobe.d/vfio.conf >/dev/null
 if [ $? -eq 1 ]; then
 echo "options vfio-pci ids=8086:3185" >> /etc/modprobe.d/vfio.conf
+fi
 update-initramfs -u
 update-grub
-fi
-
-
-
-
-
 
