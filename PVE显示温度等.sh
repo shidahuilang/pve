@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+
+
+
+function add(){
+
 nodes="/usr/share/perl5/PVE/API2/Nodes.pm"
 pvemanagerlib="/usr/share/pve-manager/js/pvemanagerlib.js"
 proxmoxlib="/usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js"
@@ -178,8 +183,7 @@ echo "匹配的行号pveversion：" $ln
 echo 修改结果：
 sed -i "${ln}r $tmpf" $pvemanagerlib
 # 显示修改结果
-sed -n '/pveversion/,+30p' $pvemanagerlib
-
+# sed -n '/pveversion/,+30p' $pvemanagerlib
 rm $tmpf
 
 
@@ -202,3 +206,57 @@ sed -n '/\/nodes\/localhost\/subscription/,+10p' $proxmoxlib
 systemctl restart pveproxy
 
 echo "请刷新浏览器缓存shift+f5"
+
+
+}
+
+function del(){
+
+nodes="/usr/share/perl5/PVE/API2/Nodes.pm"
+pvemanagerlib="/usr/share/pve-manager/js/pvemanagerlib.js"
+proxmoxlib="/usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js"
+
+pvever=$(pveversion | awk -F"/" '{print $2}')
+echo pve版本$pvever
+if [ -f "$nodes.$pvever.bak" ];then
+rm -f $nodes $pvemanagerlib $proxmoxlib
+mv $nodes.$pvever.bak $nodes
+mv $pvemanagerlib.$pvever.bak $pvemanagerlib
+mv $proxmoxlib.$pvever.bak $proxmoxlib
+
+echo "已删除温度显示，请重新刷新浏览器缓存."
+else
+echo "你没有添加过温度显示，退出脚本."
+fi
+
+
+}
+
+
+echo ==========================================================
+echo
+echo      ============ 为PVE添加硬件温度显示 ============
+echo
+echo ==========================================================
+echo 
+echo 1.添加硬件温度显示
+echo 2.删除硬件温度显示
+echo 3.退出
+
+
+read -p "请输入你的选择：" num1
+    case $num1 in
+        1)
+            add
+            ;;
+        2)
+            del
+            ;;
+        3)
+            exit 0
+            ;;
+        *)
+            echo "你的输入无效 ,请重新输入 !!!"
+            exit 1
+            ;;
+esac
