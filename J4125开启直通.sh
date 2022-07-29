@@ -8,11 +8,12 @@ echo vfio_iommu_type1 >> /etc/modules
 echo vfio_pci >> /etc/modules
 echo vfio_virqfd >> /etc/modules
 echo kvmgt >> /etc/modules
-update-initramfs -k all -u
 
-cat >> /etc/modprobe.d/vfio.conf <<'EOF'
-options vfio-pci ids=8086:3185
-EOF
+
+echo "options vfio-pci ids=8086:3185" >> /etc/modprobe.d/vfio.conf
+echo "blacklist snd_hda_intel" >> /etc/modprobe.d/blacklist.conf 
+echo "blacklist snd_hda_codec_hdmi" >> /etc/modprobe.d/blacklist.conf 
+echo "blacklist i915" >> /etc/modprobe.d/blacklist.conf 
 
 update-initramfs -u
 update-grub
