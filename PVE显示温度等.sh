@@ -30,6 +30,7 @@ else
     sleep 3
     echo 驱动信息配置成功。
 fi
+/etc/init.d/kmod start
 rm /tmp/sensors
 
 echo 备份源文件
