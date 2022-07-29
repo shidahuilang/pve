@@ -10,15 +10,11 @@ apt -y update && apt -y install curl || yum install -y curl || apk add curl bash
 ```sh
 apk add curl bash
 ```
-- ### J4125开启直通
+- ### J4125开启直通+PVE温度硬盘显示+一键开启换源，去掉订阅
 ```sh
-bash -c  "$(curl -fsSL https://raw.githubusercontent.com/shidahuilang/pve/main/J4125%E5%BC%80%E5%90%AF%E7%9B%B4%E9%80%9A.sh)"
+bash -c  "$(curl -fsSL https://raw.githubusercontent.com/shidahuilang/pve/main/pve.sh)"
 ```
 
-- ### PVE温度硬盘显示
-```sh
-bash -c  "$(curl -fsSL https://ghproxy.com/https://raw.githubusercontent.com/shidahuilang/pve/main/PVE%E6%98%BE%E7%A4%BA%E6%B8%A9%E5%BA%A6%E7%AD%89.sh)"
-```
 - ### 开启ssh
 ```
 sed -i "s/.*PermitRootLogin.*/PermitRootLogin yes/g"   /etc/ssh/sshd_config && systemctl restart sshd.service && service sshd restart
