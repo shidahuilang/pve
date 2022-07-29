@@ -14,18 +14,20 @@ echo vfio_pci >> /etc/modules
 echo vfio_virqfd >> /etc/modules
 echo kvmgt >> /etc/modules
 fi
-touch /etc/modprobe.d/blacklist.conf
-grep "blacklist" /etc/modprobe.d/blacklist.conf >/dev/null
-if [ $? -eq 1 ]; then
+
+
+
+if [ ! -f "/etc/modprobe.d/blacklist.conf" ];then
 echo "blacklist snd_hda_intel" >> /etc/modprobe.d/blacklist.conf 
 echo "blacklist snd_hda_codec_hdmi" >> /etc/modprobe.d/blacklist.conf 
 echo "blacklist i915" >> /etc/modprobe.d/blacklist.conf 
 fi
 
-grep "vfio" /etc/modprobe.d/vfio.conf >/dev/null
-if [ $? -eq 1 ]; then
+
+if [ ! -f "/etc/modprobe.d/vfio.conf" ];then
 echo "options vfio-pci ids=8086:3185" >> /etc/modprobe.d/vfio.conf
 fi
+
 
 update-initramfs -u
 update-grub
