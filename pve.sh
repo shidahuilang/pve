@@ -1,4 +1,6 @@
 #!/bin/bash
+
+
 # PVE语言设置
 pvelocale(){
 	sed -i 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && locale-gen && TIME g "PVE语言包设置完成!"
@@ -17,11 +19,12 @@ fi
 source /etc/profile
 # pause
 pause(){
-    read -n 1 -p " Press any key to continue... " input
+    read -n 1 -p " 按任意键继续... " input
     if [[ -n ${input} ]]; then
         echo -e "\b\n"
     fi
 }
+
 # 字体颜色设置
 TIME() {
 [[ -z "$1" ]] && {
@@ -42,7 +45,7 @@ TIME() {
 }
 
 
-#--------------pve_optimization-start----------------
+#--------------PVE更换软件源----------------
 # apt国内源
 aptsources() {
 	sver=`cat /etc/debian_version |awk -F"." '{print $1}'`
@@ -293,16 +296,18 @@ pve_optimization(){
 	echo
 	TIME g "修改完毕！"
 }
-#--------------pve_optimization-end----------------
+#--------------PVE更换软件源----------------
 
 
-#--------------hw_passth-start----------------
+#--------------开启硬件直通----------------
 # 开启硬件直通
 enable_pass(){
 	echo
 	TIME y "开启硬件直通..."
 	if [ `dmesg | grep -e DMAR -e IOMMU|wc -l` = 0 ];then
 		TIME r "您的硬件不支持直通！"
+		pause
+		menu
 	fi
 	if [ `cat /proc/cpuinfo|grep Intel|wc -l` = 0 ];then
 		iommu="amd_iommu=on iommu=pt video=efifb:off"
@@ -320,10 +325,21 @@ enable_pass(){
 				vfio_virqfd
 			EOF
 		fi
+		
+	if [ ! -f "/etc/modprobe.d/blacklist.conf" ];then
+       echo "blacklist snd_hda_intel" >> /etc/modprobe.d/blacklist.conf 
+       echo "blacklist snd_hda_codec_hdmi" >> /etc/modprobe.d/blacklist.conf 
+       echo "blacklist i915" >> /etc/modprobe.d/blacklist.conf 
+       fi
+
+
+    if [ ! -f "/etc/modprobe.d/vfio.conf" ];then
+      echo "options vfio-pci ids=8086:3185" >> /etc/modprobe.d/vfio.conf
+       fi	
 		TIME g "开启设置后需要重启系统，请稍后重启。"
 	else
 		TIME r "您已经配置过!"
-	fi
+	   fi
 
 }
 # 关闭硬件直通
@@ -332,6 +348,8 @@ disable_pass(){
 	TIME y "关闭硬件直通..."
 	if [ `dmesg | grep -e DMAR -e IOMMU|wc -l` = 0 ];then
 		TIME r "您的硬件不支持直通！"
+		pause
+		menu
 	fi
 	if [ `cat /proc/cpuinfo|grep Intel|wc -l` = 0 ];then
 		iommu="amd_iommu=on"
@@ -344,6 +362,8 @@ disable_pass(){
 		{
 			sed -i 's/ '$iommu'//g' /etc/default/grub
 			sed -i '/vfio/d' /etc/modules
+			rm -rf /etc/modprobe.d/blacklist.conf
+			rm -rf /etc/modprobe.d/vfio.conf
 			sleep 1
 		}|TIME g "关闭设置后需要重启系统，请稍后重启。"
 		sleep 1
@@ -388,238 +408,254 @@ EOF
 		esac
 	done
 }
-#--------------hw_passth-end----------------
+#--------------开启硬件直通----------------
 
 
-#--------------cpu_freq-start----------------
-# CPU模式
-cpu_governor(){
-	governors=`cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors`
-	while :; do
-		clear
-		cat <<EOF
-`TIME y "	      设置CPU模式"`
-┌──────────────────────────────────────────┐
-    1. ondemand		[默认]
-    2. conservative
-    3. userspace
-    4. powersave
-    5. performance
-    6. schedutil
-└──────────────────────────────────────────┘
-EOF
-		echo -ne " 请选择: [ ]\b\b"
-		read -t 10 governorid
-		governorid=${governorid:-1}
-		case "${governorid}" in
-		1)
-			governor="ondemand"
-		;;
-		2)
-			governor="conservative"
-		;;
-		3)
-			governor="userspace"
-		;;	
-		4)
-			governor="powersave"
-		;;
-		5)
-			governor="performance"
-		;;
-		6)
-			governor="schedutil"
-		;;
-		*)
-			governor=""
-		;;
-		esac
-		if [[ ${governor} != "" ]]; then
-			if [[ -n `echo "${governors}" | grep -o "${governor}"` ]]; then
-				TIME g "您选择的CPU模式：${governor}"
-				break
-			else
-				echo "您的CPU不支持该模式！"
-				sleep 2
-			fi
-		fi
-	done
-}
-# CPU最大频率
-cpu_maxfreq(){
-	echo
-	info=`cpufreq-info | grep "hardware limits" | uniq | awk -F: '{print $2}' | sed 's/ //g'`
-	echo " 当前CPU默认频率范围：${info}"
-	echo " 示例：以J4125为例，最大频率2.7GHz，输入2700000"
-	while :; do
-		read -t 30 -p " 请输入CPU最大频率[HZ]：" maxfreq || echo
-		maxfreq=${maxfreq:-2700000}
-		nmax=`echo ${maxfreq} | sed 's/[0-9]//g'`
-		if [[ ! -z $nmax ]]; then
-			TIME r "输入错误，请重新输入！"
-		elif [[ ${maxfreq} -lt 100000 ]] || [[ ${maxfreq} -gt 9000000 ]] || [[ ${maxfreq} == "" ]]; then
-			TIME r "貌似输入值的范围不正确，请重新输入！"
-		else
-			TIME g "CPU最大频率设置为：${maxfreq}"
-			break
-		fi
-	done
-}
-# CPU最小频率
-cpu_minfreq(){
-	echo
-	info=`cpufreq-info | grep "hardware limits" | uniq | awk -F: '{print $2}' | sed 's/ //g'`
-	echo " 当前CPU默认频率范围：${info}"
-	echo " 示例：以J4125为例，最小频率800MHz，输入800000"
-	while :; do
-		read -t 30 -p " 请输入CPU最小频率[HZ]：" minfreq || echo
-		minfreq=${minfreq:-800000}
-		nmin=`echo ${minfreq} | sed 's/[0-9]//g'`
-		if [[ ! -z $nmin ]]; then
-			TIME r "输入错误，请重新输入！"
-		elif [[ ${minfreq} -lt 100000 ]] || [[ ${minfreq} -gt ${maxfreq} ]] || [[ ${minfreq} == "" ]]; then
-			TIME r "貌似输入值的范围不正确，请重新输入！"
-		else
-			TIME g "CPU最小频率设置为：${minfreq}"
-			break
-		fi
-	done
-}
-# 设置CPU频率
-do_cpufreq(){
-	echo
-	TIME y "配置CPU模式"
-	sleep 1
-	install_tools
-	if [ `grep "intel_pstate=disable" /etc/default/grub|wc -l` = 0 ];then
-		sed -i 's|quiet|quiet intel_pstate=disable|' /etc/default/grub
-		update-grub
-	fi
-	cpu_governor
-	cpu_maxfreq
-	cpu_minfreq
-	cat <<-EOF > /etc/default/cpufrequtils
-ENABLE="true"
-GOVERNOR="${governor}"
-MAX_SPEED="${maxfreq}"
-MIN_SPEED="${minfreq}"
-EOF
-	echo
-	TIME g "已安装好，请稍后重启。"
-}
-# 还原CPU模式
-undo_cpufreq(){
-	clear
-	TIME y "还原CPU模式"
-	cat <<-EOF > /etc/default/cpufrequtils
-ENABLE="true"
-GOVERNOR="ondemand"
-EOF
-	systemctl restart cpufrequtils
-	while :; do
-		read -t 30 -p " 是否继续？[y/Y或n/N，默认y]：" rmgoon || echo
-		rmgoon=${rmgoon:-y}
-		case ${rmgoon} in
-		y|Y)
-			apt -y remove cpufrequtils && \
-			sed -i 's/ intel_pstate=disable//g' /etc/default/grub && \
-			rm -rf /etc/default/cpufrequtils && TIME g "配置完成!"
-			break
-		;;
-		n|N)
-			menu
-			break
-		;;
-		*)
-		;;
-		esac
-	done
-}
-# CPU模式菜单
-cpu_freq(){
-	clear
-	cat <<-EOF
-`TIME y "	      cpufrequtils工具"`
-┌──────────────────────────────────────────┐
-    1. 安装配置
-    2. 还原配置
-├──────────────────────────────────────────┤
-    0. 返回
-└──────────────────────────────────────────┘
-EOF
-	echo -ne " 请选择: [ ]\b\b"
-	read -t 60 cpumenuid
-	cpumenuid=${cpumenuid:-0}
-	case "${cpumenuid}" in
-	1)
-		if [ `grep "intel_pstate=disable" /etc/default/grub|wc -l` = 0 ];then
-			do_cpufreq
-		else
-			TIME y "查询到/etc/default/grub存在intel_pstate=disable配置，似乎已经配置过。"
-			while :; do
-				read -t 10 -p " 是否继续？[y/Y或n/N，默认y]：" chgoon || echo
-				chgoon=${chgoon:-y}
-				case ${chgoon} in
-				y|Y)
-					do_cpufreq
-					break
-				;;
-				n|N)
-					menu
-					break
-				;;
-				*)
-				;;
-				esac
-			done
-		fi
-		echo
-		pause
-		menu
-	;;
-	2)
-		undo_cpufreq
-		echo
-		pause
-		menu
-	;;
-	0)
-		menu
-	;;
-	*)
-		cpu_freq		
-	esac
-}
-#--------------cpu_freq-end----------------
-
+#--------------CPU、主板、硬盘温度显示----------------
 
 # 安装工具
-install_tools(){
-	pve_pkgs="cpufrequtils"
-	for i in ${pve_pkgs}; do
-		if [[ $(apt list --installed | grep -o "^${i}\/" | wc -l) -ge 1 ]]; then
-			TIME g "${i} 已安装"
-			sleep 3
-		else
-			clear
-			TIME r "${i} 未安装"
-			TIME g "开始安装${i} ..."
-			apt install -y ${i}
-		fi
-	done
+cpu_add(){
+
+nodes="/usr/share/perl5/PVE/API2/Nodes.pm"
+pvemanagerlib="/usr/share/pve-manager/js/pvemanagerlib.js"
+proxmoxlib="/usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js"
+
+echo 安装lm-sensors
+if ! sensors;then
+  apt update && apt-get install lm-sensors && apt-get install nvme-cli && apt-get install hddtemp && chmod +s /usr/sbin/nvme && chmod +s /usr/sbin/hddtemp && chmod +s /usr/sbin/smartctl
+fi
+
+echo 检测硬件信息
+sensors-detect --auto > /tmp/sensors
+drivers=`sed -n '/Chip drivers/,/\#----cut here/p' /tmp/sensors|sed '/Chip /d'|sed '/cut/d'`
+if [ `echo $drivers|wc -w` = 0 ];then
+    echo 没有找到任何驱动，似乎你的系统不支持。
+else
+    for i in $drivers
+    do
+        modprobe $i
+        if [ `grep $i /etc/modules|wc -l` = 0 ];then
+            echo $i >> /etc/modules
+        fi
+    done
+    sensors
+    sleep 3
+    echo 驱动信息配置成功。
+fi
+/etc/init.d/kmod start
+rm /tmp/sensors
+
+echo 备份源文件
+pvever=$(pveversion | awk -F"/" '{print $2}')
+echo pve版本$pvever
+[ ! -e $nodes.$pvever.bak ] && cp $nodes $nodes.$pvever.bak || { echo 已经执行过修改，请勿重复执行; exit 1;}
+[ ! -e $pvemanagerlib.$pvever.bak ] && cp $pvemanagerlib $pvemanagerlib.$pvever.bak
+[ ! -e $proxmoxlib.$pvever.bak ] && cp $proxmoxlib $proxmoxlib.$pvever.bak
+
+# 生成系统变量
+therm='$res->{thermalstate} = `sensors`;';
+cpure='$res->{cpusensors} = `lscpu | grep MHz`;';
+m2temp='$res->{nvme_ssd_temperatures} = `smartctl -a /dev/nvme?|grep -E "Model Number|Total NVM Capacity|Temperature:|Percentage|Data Unit|Power On Hours"`;';
+hddtempe='$res->{hdd_temperatures} = `smartctl -a /dev/sd?|grep -E "Device Model|Capacity|Power_On_Hours|Temperature"`;';
+
+
+###################  修改node.pm   ##########################
+echo 修改node.pm：
+sed -i "/PVE::pvecfg::version_text()/a $cpure\n$therm\n$m2temp\n$hddtempe" $nodes
+# 显示修改结果
+sed -n "/PVE::pvecfg::version_text()/,+5p"  $nodes
+
+
+###################  修改pvemanagerlib.js   ##########################
+tmpf=tmpfile.temp
+touch $tmpf
+cat > $tmpf << 'EOF'
+	{
+          itemId: 'thermal',
+          colspan: 2,
+          printBar: false,
+          title: gettext('CPU温度'),
+          textField: 'thermalstate',
+          renderer:function(value){
+              // const p0 = value.match(/Package id 0.*?\+([\d\.]+)Â/)[1];  // CPU包温度
+              const c0 = value.match(/Core 0.*?\+([\d\.]+)Â/)[1];  // CPU核心1温度
+              const c1 = value.match(/Core 1.*?\+([\d\.]+)Â/)[1];  // CPU核心2温度
+              const c2 = value.match(/Core 2.*?\+([\d\.]+)Â/)[1];  // CPU核心3温度
+              const c3 = value.match(/Core 3.*?\+([\d\.]+)Â/)[1];  // CPU核心4温度
+              // const b0 = value.match(/temp1.*?\+([\d\.]+)?/)[1];  // 主板温度
+              // const b1 = value.match(/temp2.*?\+([\d\.]+)?/)[1];  // 主板温度2
+              return ` 核心1: ${c0} ℃ | 核心2: ${c1} ℃ | 核心3: ${c2} ℃ | 核心4: ${c3} ℃ `  // 不带主板温度
+              // return `Package: ${p0} ℃ || 核心1: ${c0} ℃ | 核心2: ${c1} ℃ | 核心3: ${c2} ℃ | 核心4: ${c3} ℃ || 主板: ${b0} ℃ | ${b1} ℃ `  // 带主板温度
+            }
+    },
+	{
+          itemId: 'MHz',
+          colspan: 2,
+          printBar: false,
+          title: gettext('CPU频率'),
+          textField: 'cpusensors',
+          renderer:function(value){
+			  const f0 = value.match(/CPU MHz.*?([\d]+)/)[1];
+			  const f1 = value.match(/CPU min MHz.*?([\d]+)/)[1];
+			  const f2 = value.match(/CPU max MHz.*?([\d]+)/)[1];
+			  return `CPU实时: ${f0} MHz | 最小: ${f1} MHz | 最大: ${f2} MHz `
+            }
+	},
+	// /* 检测不到相关参数的可以注释掉---需要的注释本行即可
+	/* 风扇转速
+	{
+          itemId: 'RPM',
+          colspan: 2,
+          printBar: false,
+          title: gettext('CPU风扇'),
+          textField: 'thermalstate',
+          renderer:function(value){
+			  const fan1 = value.match(/fan1:.*?\ ([\d.]+) R/)[1];
+			  const fan2 = value.match(/fan2:.*?\ ([\d.]+) R/)[1];
+			  return `CPU风扇: ${fan1} RPM | 系统风扇: ${fan2} RPM `
+            }
+	},
+	// 检测不到相关参数的可以注释掉---需要的注释本行即可  */
+	// /* 检测不到相关参数的可以注释掉---需要的注释本行即可
+	// NVME硬盘温度
+	{
+          itemId: 'nvme_ssd-temperatures',
+          colspan: 2,
+          printBar: false,
+          title: gettext('NVME硬盘'),
+          textField: 'nvme_ssd_temperatures',
+          renderer:function(value){
+          if (value.length > 0) {
+          let nvmedevices = value.matchAll(/^Model.*:\s*([\s\S]*?)(\n^Total.*\[[\s\S]*?\]$|\s{0}$)\n^Temperature:\s*([\d]+)\s*Celsius\n^Percentage.*([\d]+\%)\n^Data Units.*\[([\s\S]*?)\]\n^Data Units.*\[([\s\S]*?)\]\n^Power.*:\s*([\s\S]*?)\n/gm);
+          for (const nvmedevice of nvmedevices) {
+          for (var i=5; i<8; i++) {
+          nvmedevice[i] = nvmedevice[i].replace(/ |,/gm, '');
+          }
+          if (nvmedevice[2].length > 0) {
+          let nvmecapacity = nvmedevice[2].match(/.*\[([\s\S]*?)\]/);
+          nvmecapacity = nvmecapacity[1].replace(/ /, '');
+          value = `${nvmedevice[1]} | 已使用寿命: ${nvmedevice[4]} (累计读取: ${nvmedevice[5]}, 累计写入: ${nvmedevice[6]}) | 容量: ${nvmecapacity} | 已通电: ${nvmedevice[7]}小时 | 温度: ${nvmedevice[3]}°C\n`;
+          } else {
+          value = `${nvmedevice[1]} | 已使用寿命: ${nvmedevice[4]} (累计读取: ${nvmedevice[5]}, 累计写入: ${nvmedevice[6]}) | 已通电: ${nvmedevice[7]}小时 | 温度: ${nvmedevice[3]}°C\n`;
+          }
+          }
+          return value.replace(/\n/g, '<br>');
+          } else { 
+          return `提示: 未安装硬盘或已直通硬盘控制器`;
+          }
+          }
+          },
+	// /* 检测不到相关参数的可以注释掉---需要的注释本行即可  */
+          // SATA硬盘温度
+          {
+          itemId: 'hdd-temperatures',
+          colspan: 2,
+          printBar: false,
+          title: gettext('SATA硬盘'),
+          textField: 'hdd_temperatures',
+          renderer:function(value){
+          if (value.length > 0) {
+          let devices = value.matchAll(/(\s*Model.*:\s*[\s\S]*?\n){1,2}^User.*\[([\s\S]*?)\]\n^\s*9[\s\S]*?\-\s*([\d]+)[\s\S]*?(\n(^19[0,4][\s\S]*?$){1,2}|\s{0}$)/gm);
+          for (const device of devices) {
+          if(device[1].indexOf("Family") !== -1){
+          devicemodel = device[1].replace(/.*Model Family:\s*([\s\S]*?)\n^Device Model:\s*([\s\S]*?)\n/m, '$1 - $2');
+          } else {
+          devicemodel = device[1].replace(/.*Model:\s*([\s\S]*?)\n/m, '$1');
+          }
+          device[2] = device[2].replace(/ |,/gm, '');
+          if(value.indexOf("Min/Max") !== -1){
+          let devicetemps = device[5].matchAll(/19[0,4][\s\S]*?\-\s*(\d+)(\s\(Min\/Max\s(\d+)\/(\d+)\)$|\s{0}$)/gm);
+          for (const devicetemp of devicetemps) {
+          value = `${devicemodel} | 容量: ${device[2]} | 已通电: ${device[3]}小时 | 温度: ${devicetemp[1]}°C\n`;
+          }
+          } else if (value.indexOf("Temperature") !== -1){
+          let devicetemps = device[5].matchAll(/19[0,4][\s\S]*?\-\s*(\d+)/gm);
+          for (const devicetemp of devicetemps) {
+          value = `${devicemodel} | 容量: ${device[2]} | 已通电: ${device[3]}小时 | 温度: ${devicetemp[1]}°C\n`;
+          }
+          } else {
+          value = `${devicemodel} | 容量: ${device[2]} | 已通电: ${device[3]}小时 | 提示: 未检测到温度传感器\n`;
+          }
+          }
+          return value.replace(/\n/g, '<br>');
+          } else { 
+          return `提示: 未安装硬盘或已直通硬盘控制器`;
+          }
+          }
+          },
+EOF
+
+echo 找到关键字pveversion的行号
+# 显示匹配的行
+ln=$(sed -n '/pveversion/,+10{/},/{=;q}}' $pvemanagerlib)
+echo "匹配的行号pveversion：" $ln
+
+echo 修改结果：
+sed -i "${ln}r $tmpf" $pvemanagerlib
+# 显示修改结果
+# sed -n '/pveversion/,+30p' $pvemanagerlib
+rm $tmpf
+
+
+echo 修改页面高度
+# 修改并显示修改结果,位置10288行,原始值400
+# sed -i -r '/\[logView\]/,+5{/heigh/{s#[0-9]+#700#;}}' $pvemanagerlib
+# sed -n '/\[logView\]/,+5{/heigh/{p}}' $pvemanagerlib
+# 修改并显示修改结果,位置36495行,原始值300
+sed -i -r '/widget\.pveNodeStatus/,+5{/height/{s#[0-9]+#380#}}' $pvemanagerlib
+sed -n '/widget\.pveNodeStatus/,+5{/height/{p}}' $pvemanagerlib
+## 两处 height 的值需按情况修改，每多一行数据增加 20
+###################  修改proxmoxlib.js   ##########################
+
+
+echo 修改去除订阅弹窗
+sed -r -i '/\/nodes\/localhost\/subscription/,+10{/^\s+if \(res === null /{N;s#.+#\t\t  if(false){#}}' $proxmoxlib
+# 显示修改结果
+sed -n '/\/nodes\/localhost\/subscription/,+10p' $proxmoxlib
+
+systemctl restart pveproxy
+
+echo "请刷新浏览器缓存shift+f5"
+
+
 }
+
+# 删除工具
+cpu_del(){
+
+nodes="/usr/share/perl5/PVE/API2/Nodes.pm"
+pvemanagerlib="/usr/share/pve-manager/js/pvemanagerlib.js"
+proxmoxlib="/usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js"
+
+pvever=$(pveversion | awk -F"/" '{print $2}')
+echo pve版本$pvever
+if [ -f "$nodes.$pvever.bak" ];then
+rm -f $nodes $pvemanagerlib $proxmoxlib
+mv $nodes.$pvever.bak $nodes
+mv $pvemanagerlib.$pvever.bak $pvemanagerlib
+mv $proxmoxlib.$pvever.bak $proxmoxlib
+
+echo "已删除温度显示，请重新刷新浏览器缓存."
+else
+echo "你没有添加过温度显示，退出脚本."
+fi
+
+
+}
+
+#--------------CPU、主板、硬盘温度显示----------------
 
 
 # 主菜单
 menu(){
 	clear
 	cat <<-EOF
-`TIME y "	      PVE优化脚本22.03"`
+`TIME y "	      PVE优化脚本"`
 ┌──────────────────────────────────────────┐
     1. 一键优化PVE(换源、去订阅等)
     2. 配置PCI硬件直通
-    3. CPU睿频模式
-    4. CPU、主板、硬盘温度显示
+    3. 添加CPU、主板、硬盘温度显示
+    4. 删除CPU、主板、硬盘温度显示
 ├──────────────────────────────────────────┤
     0. 退出
 └──────────────────────────────────────────┘
@@ -641,14 +677,13 @@ EOF
 		menu
 	;;
 	3)
-		cpu_freq
+		cpu_add
 		echo
 		pause
 		menu
 	;;
 	4)
-		
-		cpu_core
+		cpu_del
 		echo
 		pause
 		menu
@@ -658,6 +693,7 @@ EOF
 		exit 0
 	;;
 	*)
+		echo "你的输入无效 ,请重新输入 !!!"
 		menu
 	;;
 	esac
