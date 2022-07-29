@@ -1807,9 +1807,9 @@ Your hardware do not support PCI Passthrough(No IOMMU)
         chPassth
     fi
     if [ `cat /proc/cpuinfo|grep Intel|wc -l` = 0 ];then
-        iommu="amd_iommu=on"
+        iommu="amd_iommu=on video=efifb:off"
     else
-        iommu="intel_iommu=on"
+        iommu="intel_iommu=on iommu=pt video=efifb:off"
     fi
     if [ `grep $iommu /etc/default/grub|wc -l` = 0 ];then
         sed -i.bak 's|quiet|quiet '$iommu'|' /etc/default/grub
@@ -1820,6 +1820,7 @@ vfio
 vfio_iommu_type1
 vfio_pci
 vfio_virqfd
+kvmgt
 EOF
         fi
         whiptail --title "Success" --msgbox "
