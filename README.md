@@ -10,7 +10,7 @@ apt -y update && apt -y install curl || yum install -y curl || apk add curl bash
 ```sh
 apk add curl bash
 ```
-- ### J4125开启直通+PVE温度硬盘显示+一键开启换源，去掉订阅+CPU睿频模式选择
+- ### J4125开启直通+PVE温度硬盘显示风扇转速+一键开启换源，去订阅+CPU睿频模式选择
 ```sh
 bash -c  "$(curl -fsSL https://raw.githubusercontent.com/shidahuilang/pve/main/pve.sh)"
 ```
