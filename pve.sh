@@ -431,6 +431,8 @@ sensors-detect --auto > /tmp/sensors
 drivers=`sed -n '/Chip drivers/,/\#----cut here/p' /tmp/sensors|sed '/Chip /d'|sed '/cut/d'`
 if [ `echo $drivers|wc -w` = 0 ];then
     echo 没有找到任何驱动，似乎你的系统不支持。
+    pause
+    menu
 else
     for i in $drivers
     do
