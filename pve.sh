@@ -422,9 +422,7 @@ pvemanagerlib="/usr/share/pve-manager/js/pvemanagerlib.js"
 proxmoxlib="/usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js"
 
 echo 安装lm-sensors
-if ! sensors;then
-  apt update && apt-get install lm-sensors && apt-get install nvme-cli && apt-get install hddtemp && chmod +s /usr/sbin/nvme && chmod +s /usr/sbin/hddtemp && chmod +s /usr/sbin/smartctl
-fi
+apt-get install lm-sensors && apt-get install nvme-cli && apt-get install hddtemp && chmod +s /usr/sbin/nvme && chmod +s /usr/sbin/hddtemp && chmod +s /usr/sbin/smartctl
 
 echo 检测硬件信息
 sensors-detect --auto > /tmp/sensors
