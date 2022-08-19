@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-
+#i210网卡J4125专用
 grep "iommu" /etc/default/grub >/dev/null
 if [ $? -eq 1 ]; then
 sed -i 's/quiet/quiet intel_iommu=on iommu=pt video=efifb:off/g' /etc/default/grub
