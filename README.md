@@ -12,9 +12,12 @@ apk add curl bash
 ```
 - ### PVE开启直通+CPU硬盘温度显示,风扇转速+一键开启换源，去订阅+CPU睿频模式选择
 ```sh
-bash -c  "$(curl -fsSL https://raw.githubusercontent.com/shidahuilang/pve/main/pve.sh)"
+bash -c  "$(curl -fsSL https://ghproxy.com/https://raw.githubusercontent.com/shidahuilang/pve/main/pve.sh)"
 ```
-
+- ### PVE一键升级PVE，lxc换源，去掉无效订阅
+```sh
+bash -c  "$(curl -fsSL https://ghproxy.com/https://raw.githubusercontent.com/shidahuilang/pve/main/pvehy.sh)"
+```
 - ### 开启ssh
 ```
 sed -i "s/.*PermitRootLogin.*/PermitRootLogin yes/g"   /etc/ssh/sshd_config && systemctl restart sshd.service && service sshd restart
