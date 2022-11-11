@@ -1,0 +1,68 @@
+
+#####      安装 Fail2ban SSH防护 服务
+
+#新建配置目录
+mkdir -p /docker/fail2ban/jail.d
+# 首先写入配置文件
+echo '
+[DEFAULT]
+#指定哪些地址可以忽略 fail2ban 防御
+ignoreip = 127.0.0.1/8
+bantime = 86400
+maxretry = 10
+findtime = 1800
+
+[sshd]
+enabled = true
+filter = sshd
+action = iptables[name=SSH, port=ssh, protocol=tcp]
+logpath = /var/log/auth.log
+#输入最大尝试次数
+maxretry = 10
+#查找失败次数的时长（秒）
+findtime = 3600
+#输入阻止IP的持续时间（秒）
+bantime = 43200
+
+' >> /docker/fail2ban/jail.d/sshd.local
+
+
+
+docker run -it \
+  --name Fail2ban \
+  --restart unless-stopped \
+  --network host \
+  -e TZ=Asia/Shanghai \
+  --cap-add NET_ADMIN \
+  --cap-add NET_RAW \
+  -v /docker/fail2ban:/data \
+  -v /var/log:/var/log:ro \
+  crazymax/fail2ban:latest
+
+
+
+
+# 查看工作状态
+docker exec -ti Fail2ban fail2ban-client status sshd
+
+# iptables 规则
+docker exec -ti Fail2ban iptables -nvL
+
+# 手动禁止IP
+docker exec -t Fail2ban fail2ban-client set sshd banip 10.0.0.253
+
+# 手动删除IP
+docker exec -t Fail2ban fail2ban-client set sshd unbanip 10.0.0.55
+
+
+
+
+# 邮箱通知
+  -e SSMTP_HOST=smtp.gmail.com \
+  -e SSMTP_PORT=587 \
+  -e SSMTP_HOSTNAME=raspberrypi \
+  -e SSMTP_USER=my_email@gmail.com \
+  -e SSMTP_PASSWORD=XXXXXXXX \
+  -e SSMTP_TLS=YES \
+  -e SSMTP_STARTTLS=YES \
+
