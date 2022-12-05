@@ -12,7 +12,7 @@
 
 docker=$(docker ps -a | grep Exited) && dockerstop=$(awk '{print $(2)}' <<<${docker}) && echo "$dockerstop" >> /var/tmp/dockerlist.md
 
-#排除项目
+# 排除项目
 cat >> /var/tmp/docker.md <<EOF
 hectorqin/reader
 EOF
