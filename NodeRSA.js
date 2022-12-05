@@ -407,4 +407,3 @@ module.exports = (function () {
 
     return NodeRSA;
 })();
-
