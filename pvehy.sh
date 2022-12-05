@@ -1,5 +1,5 @@
 #!/bin/bash
-
+#pve换源，去订阅
 TIME() {
 [[ -z "$1" ]] && {
 	echo -ne " "
