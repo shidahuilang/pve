@@ -1,12 +1,12 @@
 
-#####      °²×° Fail2ban SSH·À»¤ ·şÎñ
+######      å®‰è£… Fail2ban SSHé˜²æŠ¤ æœåŠ¡
 
-#ĞÂ½¨ÅäÖÃÄ¿Â¼
+#æ–°å»ºé…ç½®ç›®å½•
 mkdir -p /docker/fail2ban/jail.d
-# Ê×ÏÈĞ´ÈëÅäÖÃÎÄ¼ş
+# é¦–å…ˆå†™å…¥é…ç½®æ–‡ä»¶
 echo '
 [DEFAULT]
-#Ö¸¶¨ÄÄĞ©µØÖ·¿ÉÒÔºöÂÔ fail2ban ·ÀÓù
+#æŒ‡å®šå“ªäº›åœ°å€å¯ä»¥å¿½ç•¥ fail2ban é˜²å¾¡
 ignoreip = 127.0.0.1/8
 bantime = 86400
 maxretry = 10
@@ -17,11 +17,11 @@ enabled = true
 filter = sshd
 action = iptables[name=SSH, port=ssh, protocol=tcp]
 logpath = /var/log/auth.log
-#ÊäÈë×î´ó³¢ÊÔ´ÎÊı
+#è¾“å…¥æœ€å¤§å°è¯•æ¬¡æ•°
 maxretry = 10
-#²éÕÒÊ§°Ü´ÎÊıµÄÊ±³¤£¨Ãë£©
+#æŸ¥æ‰¾å¤±è´¥æ¬¡æ•°çš„æ—¶é•¿ï¼ˆç§’ï¼‰
 findtime = 3600
-#ÊäÈë×èÖ¹IPµÄ³ÖĞøÊ±¼ä£¨Ãë£©
+#è¾“å…¥é˜»æ­¢IPçš„æŒç»­æ—¶é—´ï¼ˆç§’ï¼‰
 bantime = 43200
 
 ' >> /docker/fail2ban/jail.d/sshd.local
@@ -42,22 +42,22 @@ docker run -it \
 
 
 
-# ²é¿´¹¤×÷×´Ì¬
+# æŸ¥çœ‹å·¥ä½œçŠ¶æ€
 docker exec -ti Fail2ban fail2ban-client status sshd
 
-# iptables ¹æÔò
+# iptables è§„åˆ™
 docker exec -ti Fail2ban iptables -nvL
 
-# ÊÖ¶¯½ûÖ¹IP
+# æ‰‹åŠ¨ç¦æ­¢IP
 docker exec -t Fail2ban fail2ban-client set sshd banip 10.0.0.253
 
-# ÊÖ¶¯É¾³ıIP
+# æ‰‹åŠ¨åˆ é™¤IP
 docker exec -t Fail2ban fail2ban-client set sshd unbanip 10.0.0.55
 
 
 
 
-# ÓÊÏäÍ¨Öª
+# é‚®ç®±é€šçŸ¥
   -e SSMTP_HOST=smtp.gmail.com \
   -e SSMTP_PORT=587 \
   -e SSMTP_HOSTNAME=raspberrypi \
