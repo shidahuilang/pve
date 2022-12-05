@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-
+##一键开启ssh登陆
 if [[ ! "$USER" == "root" ]]; then
    echo -e "\033[41;33m 警告：请使用root用户操作!~~  \033[0m"
    exit 1
