@@ -26,8 +26,14 @@ sed -i "s/.*PermitRootLogin.*/PermitRootLogin yes/g"   /etc/ssh/sshd_config && s
 ```sh
 bash -c  "$(curl -fsSL https://ghproxy.com/https://raw.githubusercontent.com/shidahuilang/pve/main/ssh.sh)"
 ```
-
-
+- 黑群晖cpu正确识别
+```
+wget -qO ch_cpuinfo_cn.sh https://ghproxy.com/https://raw.githubusercontent.com/shidahuilang/pve/main/ch_cpuinfo_cn.sh && sudo bash ch_cpuinfo_cn.sh
+```
+- 黑群晖自动挂载洗白(挂载目录/tmp/boot)
+```
+bash -c  "$(curl -fsSL https://ghproxy.com/https://github.com/shidahuilang/pve/blob/main/Synology.sh)"
+```
 
 - ### PVE升级系统
 ```sh
