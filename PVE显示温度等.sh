@@ -193,7 +193,7 @@ echo 修改页面高度
 # sed -i -r '/\[logView\]/,+5{/heigh/{s#[0-9]+#700#;}}' $pvemanagerlib
 # sed -n '/\[logView\]/,+5{/heigh/{p}}' $pvemanagerlib
 # 修改并显示修改结果,位置36495行,原始值300
-sed -i -r '/widget\.pveNodeStatus/,+5{/height/{s#[0-9]+#400#}}' $pvemanagerlib
+sed -i -r '/widget\.pveNodeStatus/,+5{/height/{s#[0-9]+#300#}}' $pvemanagerlib
 sed -n '/widget\.pveNodeStatus/,+5{/height/{p}}' $pvemanagerlib
 ## 两处 height 的值需按情况修改，每多一行数据增加 20
 ###################  修改proxmoxlib.js   ##########################
