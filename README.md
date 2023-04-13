@@ -18,9 +18,9 @@ bash -c  "$(curl -fsSL https://ghproxy.com/https://raw.githubusercontent.com/shi
 ```sh
 bash -c  "$(curl -fsSL https://ghproxy.com/https://raw.githubusercontent.com/shidahuilang/pve/main/pvehy.sh)"
 ```
-- ### 开启ssh
+- ### 开启ssh+BBR+root登录+密码设置
 ```
-sed -i "s/.*PermitRootLogin.*/PermitRootLogin yes/g"   /etc/ssh/sshd_config && systemctl restart sshd.service && service sshd restart
+bash -c  "$(curl -fsSL https://raw.githubusercontent.com/shidahuilang/pve/main/lang.sh)"
 ```
 - ### (centos、ubuntu、debian、alpine)一键开启SSH
 ```sh
