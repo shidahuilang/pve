@@ -6,14 +6,6 @@ YELLOW='\033[1;33m'
 
 NC='\033[0m'
 
-echo "修改ssh配置"
-sed -i "s/PermitRootLogin.*/PermitRootLogin yes/g" /etc/ssh/sshd_config
-
-sed -i "s/#PermitRootLogin.*/PermitRootLogin yes/g" /etc/ssh/sshd_config
-
-sed -i "s/PasswordAuthentication.*/PasswordAuthentication yes/g" /etc/ssh/sshd_config
-
-systemctl restart ssh
 
 echo "开启BBR"
 echo "net.core.default_qdisc=fq" >> /etc/sysctl.conf
@@ -34,7 +26,7 @@ sudo sed -i 's/^#\?PasswordAuthentication.*/PasswordAuthentication yes/g' /etc/s
 sudo service sshd restart
 
 echo "卸载man-db"
-apt remove man-db
+apt -y remove man-db
 
 echo "更新并安装curl和wget"
 apt -y update && apt -y install curl wget
