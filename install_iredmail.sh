@@ -10,7 +10,7 @@ touch iredmail-docker.conf
 # 向配置文件中添加必要的信息
 echo HOSTNAME=mail.mydomain.com >> iredmail-docker.conf # 设置主机名
 echo FIRST_MAIL_DOMAIN=mydomain.com >> iredmail-docker.conf # 设置首个邮件域名
-echo FIRST_MAIL_DOMAIN_ADMIN_PASSWORD=my-secret-password >> iredmail-docker.conf # 设置首个邮件域管理员密码
+echo FIRST_MAIL_DOMAIN_ADMIN_PASSWORD=dahuilang >> iredmail-docker.conf # 设置首个邮件域管理员密码
 echo MLMMJADMIN_API_TOKEN= >> iredmail-docker.conf # 设置MLMMJ API Token（可选）
 
 # 生成一个随机的Roundcube密钥并添加到配置文件中
