@@ -11,8 +11,8 @@ plain='\033[0m'
 [[ $EUID -ne 0 ]] && echo -e "[${red}Error${plain}] 请用root权限运行脚本!" && exit 1
 
 #检查是否是优盘引导
-echo -e "\n $yello正在检查系统...$plain"
-sleep 2s
+echo -e "\n $yellow正在检查系统...$plain"
+sleep 1s
 
 if [ -b /dev/synoboot1 ]; then
     echo -e "$green检测脚本适用于此系统!$plain"
@@ -26,8 +26,6 @@ sleep 1s
 mkdir -p /tmp/boot
 cd /dev/ && mount -t vfat synoboot1 /tmp/boot/
 
-
-
 if [ $? == 0 ]; then
     echo -e "$green分区挂载成功！$plain"
 else
@@ -36,16 +34,14 @@ fi
 
 #检查grub文件
 echo -e "$green运行获取grub命令!$plain"
-#sleep 1s
-#cd /dev/ && mount -t vfat synoboot1 /tmp/boot/
 sleep 1s
 if [ -f /tmp/boot/grub/grub.cfg ]; then
-    echo -e "$green检测到grub文件，正在读取当前序列号..$plain"
+    echo -e "$green检测到user-config.yml文件，正在读取当前序列号和MAC地址..$plain"
     sleep 1s
-    SN=$(grep "set sn" /tmp/boot/grub/grub.cfg |cut -c 8-)
-	MAC=$(grep "set mac" /tmp/boot/grub/grub.cfg |cut -c 8-)
+    SN=$(grep "sn:" /tmp/boot/grub/grub.cfg | awk -F ": " '{print $2}')
+    MAC=$(grep "mac1:" /tmp/boot/grub/grub.cfg | awk -F ": " '{print $2}')
     echo -e "$green检测到当前序列号为$SN..$plain"
-	echo -e "$green检测到当前mac为$MAC..$plain"
+    echo -e "$green检测到当前MAC地址为$MAC..$plain"
 else 
     echo -e "$red没有检测到grub文件！$plain" && exit 1
 fi
@@ -54,23 +50,14 @@ fi
 read -p "请输入新的序列号(按回车键确定)    " NEWSN
 echo -e "$green新序列号为$NEWSN..$plain"
 echo -e "$green正在替换序列号..$plain"
-read -p "请输入新的mac(按回车键确定)    " NEWSN
-echo -e "$green新mac为$NEWMAC..$plain"
-echo -e "$green正在替换mac..$plain"
+read -p "请输入新的MAC地址(按回车键确定)    " NEWMAC
+echo -e "$green新MAC地址为$NEWMAC..$plain"
+echo -e "$green正在替换MAC地址..$plain"
 sleep 1
-sed -i "s/$SN/${NEWSN}/g" /tmp/boot/grub/grub.cfg
-sed -i "s/$MAC/${NEWMAC}/g" /tmp/boot/grub/grub.cfg
+sed -i "s/$SN/$NEWSN/g" /tmp/boot/grub/grub.cfg
+sed -i "s/$MAC/$NEWMAC/g" /tmp/boot/grub/grub.cfg
 if [ $? == 0 ]; then
-    echo -e "$green恭喜您，序列号替换成功！请重启系统使配置生效！在控制面板-信息中心查看是否成功。$plain"
+    echo -e "$green恭喜您，序列号和MAC地址替换成功！请重启系统使配置生效！在控制面板-信息中心查看是否成功。$plain"
 else
-    echo -e "$red序列号替换失败！$plain" && exit 1
+    echo -e "$red序列号和MAC地址替换失败！$plain" && exit 1
 fi
-
-
-
-
-
-
-
-
-
