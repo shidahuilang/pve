@@ -42,7 +42,7 @@ sleep 1s
 if [ -f /tmp/boot/user-config.yml ]; then
     echo -e "$green检测到user-config.yml文件，正在读取当前序列号..$plain"
     sleep 1s
-    SN=$(grep "set sn" /tmp/bootuser-config.yml |cut -c 8-)
+    SN=$(grep "set sn" /tmp/boot/user-config.yml |cut -c 8-)
 	MAC=$(grep "set mac" /tmp/boot/user-config.yml |cut -c 8-)
     echo -e "$green检测到当前序列号为$SN..$plain"
 	echo -e "$green检测到当前mac为$MAC..$plain"
