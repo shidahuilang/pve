@@ -12,7 +12,7 @@ plain='\033[0m'
 
 #检查是否是优盘引导
 echo -e "\n $yello正在检查系统...$plain"
-sleep 2s
+sleep
 
 if [ -b /dev/synoboot1 ]; then
     echo -e "$green检测脚本适用于此系统!$plain"
