@@ -38,8 +38,8 @@ sleep 1s
 if [ -f /tmp/boot/grub/grub.cfg ]; then
     echo -e "$green检测到user-config.yml文件，正在读取当前序列号和MAC地址..$plain"
     sleep 1s
-    SN=$(grep "sn:" /tmp/boot/grub/grub.cfg | awk -F ": " '{print $2}')
-    MAC=$(grep "mac1:" /tmp/boot/grub/grub.cfg | awk -F ": " '{print $2}')
+    SN=$(grep "sn:" /tmp/boot/boot/grub/grub.cfg | awk -F ": " '{print $2}')
+    MAC=$(grep "mac1:" /tmp/boot/boot/grub/grub.cfg | awk -F ": " '{print $2}')
     echo -e "$green检测到当前序列号为$SN..$plain"
     echo -e "$green检测到当前MAC地址为$MAC..$plain"
 else 
@@ -54,8 +54,8 @@ read -p "请输入新的MAC地址(按回车键确定)    " NEWMAC
 echo -e "$green新MAC地址为$NEWMAC..$plain"
 echo -e "$green正在替换MAC地址..$plain"
 sleep 1
-sed -i "s/$SN/$NEWSN/g" /tmp/boot/grub/grub.cfg
-sed -i "s/$MAC/$NEWMAC/g" /tmp/boot/grub/grub.cfg
+sed -i "s/$SN/$NEWSN/g" /tmp/boot/boot/grub/grub.cfg
+sed -i "s/$MAC/$NEWMAC/g" /tmp/boot/boot/grub/grub.cfg
 if [ $? == 0 ]; then
     echo -e "$green恭喜您，序列号和MAC地址替换成功！请重启系统使配置生效！在控制面板-信息中心查看是否成功。$plain"
 else
