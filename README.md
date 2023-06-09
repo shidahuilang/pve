@@ -33,9 +33,11 @@ wget -qO ch_cpuinfo_cn.sh https://ghproxy.com/https://raw.githubusercontent.com/
 - 黑群晖自动挂载洗白(挂载目录/tmp/boot)
 ```
 bash -c  "$(curl -fsSL https://ghproxy.com/https://raw.githubusercontent.com/shidahuilang/pve/main/arpl.sh)"
-
 ```
-
+- 一键设置交换虚拟分区
+```
+bash -c  "$(curl -fsSL https://ghproxy.com/https://raw.githubusercontent.com/shidahuilang/pve/main/swap.sh)"
+```
 - ### PVE升级系统
 ```sh
 apt update && apt dist-upgrade -y
