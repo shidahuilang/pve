@@ -32,8 +32,8 @@ wget -qO ch_cpuinfo_cn.sh https://ghproxy.com/https://raw.githubusercontent.com/
 ```
 - 黑群晖自动挂载洗白2个版本(挂载目录/tmp/boot)
 ```
-bash -c  "$(curl -fsSL https://ghproxy.com/https://github.com/shidahuilang/pve/blob/main/arpl.sh)"
-bash -c  "$(curl -fsSL https://ghproxy.com/https://github.com/shidahuilang/pve/blob/main/Synology.sh)"
+bash -c  "$(curl -fsSL https://ghproxy.com/https://raw.githubusercontent.com/shidahuilang/pve/main/arpl.sh)"
+bash -c  "$(curl -fsSL https://ghproxy.com/https://raw.githubusercontent.com/shidahuilang/pve/main/Synology.sh)"
 ```
 
 - ### PVE升级系统
