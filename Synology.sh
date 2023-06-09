@@ -35,8 +35,8 @@ fi
 #检查grub文件
 echo -e "$green运行获取grub命令!$plain"
 sleep 1s
-if [ -f /tmp/boot/grub/grub.cfg ]; then
-    echo -e "$green检测到user-config.yml文件，正在读取当前序列号和MAC地址..$plain"
+if [ -f /tmp/boot/boot/grub/grub.cfg ]; then
+    echo -e "$green检测到grub.cfg文件，正在读取当前序列号和MAC地址..$plain"
     sleep 1s
     SN=$(grep "sn:" /tmp/boot/boot/grub/grub.cfg | awk -F ": " '{print $2}')
     MAC=$(grep "mac1:" /tmp/boot/boot/grub/grub.cfg | awk -F ": " '{print $2}')
