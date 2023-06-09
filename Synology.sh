@@ -58,8 +58,8 @@ read -p "请输入新的mac(按回车键确定)    " NEWSN
 echo -e "$green新mac为$NEWMAC..$plain"
 echo -e "$green正在替换mac..$plain"
 sleep 1
-sed -i "s/$SN/$NEWSN/g" /tmp/boot/grub/grub.cfg
-sed -i "s/$MAC/$NEWMAC/g" /tmp/boot/grub/grub.cfg
+sed -i "s/$SN/${NEWSN}/g" /tmp/boot/grub/grub.cfg
+sed -i "s/$MAC/${NEWMAC}/g" /tmp/boot/grub/grub.cfg
 if [ $? == 0 ]; then
     echo -e "$green恭喜您，序列号替换成功！请重启系统使配置生效！在控制面板-信息中心查看是否成功。$plain"
 else
