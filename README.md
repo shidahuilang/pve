@@ -10,6 +10,11 @@ apt -y update && apt -y install curl wget || yum install -y curl wget || apk add
 ```sh
 apk add curl bash
 ```
+
+集合脚本自用
+```sh
+bash -c  "$(curl -fsSL https://ghproxy.com/https://raw.githubusercontent.com/shidahuilang/pve/main/set.sh)"
+```
 - ### PVE开启直通+CPU硬盘温度显示,风扇转速+一键开启换源，去订阅+CPU睿频模式选择
 ```sh
 bash -c  "$(curl -fsSL https://ghproxy.com/https://raw.githubusercontent.com/shidahuilang/pve/main/pve.sh)"
