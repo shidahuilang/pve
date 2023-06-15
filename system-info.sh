@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env bash 
 
 # 一键在/etc/profile最下面添加 source /root/system-info.sh
 # sed -i '/system-info/d' /etc/profile && echo "source /root/system-info.sh" >> /etc/profile
