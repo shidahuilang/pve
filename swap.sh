@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash 
 
 创建交换文件
 sudo fallocate -l 2G /swapfile
