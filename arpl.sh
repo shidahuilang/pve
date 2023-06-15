@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env bash 
 #替换黑群晖序列号进行洗白
 
 # 颜色
