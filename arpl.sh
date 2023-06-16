@@ -62,4 +62,3 @@ else
     echo -e "$red序列号和MAC地址替换失败！$plain" && exit 1
 fi
 echo -e "${green}请重启系统以使更改生效。${plain}"
-echo -e "${green}取消挂载请用umount /tmp/boot/命令。${plain}"
