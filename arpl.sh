@@ -1,5 +1,6 @@
 #!/usr/bin/env bash 
 #替换黑群晖序列号进行洗白
+#by:shidahuilang
 
 # 颜色
 red='\033[0;31m'
