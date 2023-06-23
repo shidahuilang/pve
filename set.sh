@@ -13,7 +13,7 @@ plain='\033[0m'
 echo -e "${green}请选择您要执行的操作：${plain}"
 echo -e "${green}1. PVE开启直通+CPU硬盘温度显示,风扇转速+一键开启换源，去订阅+CPU睿频模式选择${plain}"
 echo -e "${green}2. PVE一键升级PVE，lxc换源，去掉无效订阅${plain}"
-echo -e "${green}3. 开启ssh+BBR+root登录+密码设置${plain}"
+echo -e "${green}3. 开启ssh+BBR+root登录+密码设置(默认密码：dahuilang)${plain}"
 echo -e "${green}4. (centos、ubuntu、debian、alpine)一键开启SSH${plain}"
 echo -e "${green}5. 黑群晖cpu正确识别${plain}"
 echo -e "${green}6. 黑群晖自动挂载洗白(挂载目录/tmp/boot)${plain}"
