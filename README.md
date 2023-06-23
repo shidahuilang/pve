@@ -23,7 +23,7 @@ bash -c  "$(curl -fsSL https://ghproxy.com/https://raw.githubusercontent.com/shi
 ```sh
 bash -c  "$(curl -fsSL https://ghproxy.com/https://raw.githubusercontent.com/shidahuilang/pve/main/pvehy.sh)"
 ```
-- ### 开启ssh+BBR+root登录+密码设置
+- ### 开启ssh+BBR+root登录+密码设置(默认密码：dahuilang)
 ```
 bash -c  "$(curl -fsSL https://raw.githubusercontent.com/shidahuilang/pve/main/lang.sh)"
 ```
