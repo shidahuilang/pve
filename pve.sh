@@ -455,7 +455,7 @@ echo pve版本$pvever
 
 # 生成系统变量
 therm='$res->{thermalstate} = `sensors`;';
-cpure='$res->{cpusensors} = `lscpu | grep MHz`;';
+cpure='$res->{cpusensors} = `cat /proc/cpuinfo | grep MHz && lscpu | grep MHz`;';
 m2temp='$res->{nvme_ssd_temperatures} = `smartctl -a /dev/nvme?|grep -E "Model Number|Total NVM Capacity|Temperature:|Percentage|Data Unit|Power On Hours"`;';
 hddtempe='$res->{hdd_temperatures} = `smartctl -a /dev/sd?|grep -E "Device Model|Capacity|Power_On_Hours|Temperature"`;';
 
@@ -496,9 +496,9 @@ cat > $tmpf << 'EOF'
           title: gettext('CPU频率'),
           textField: 'cpusensors',
           renderer:function(value){
-			  const f0 = value.match(/CPU MHz.*?([\d]+)/)[1];
-			  const f1 = value.match(/CPU min MHz.*?([\d]+)/)[1];
-			  const f2 = value.match(/CPU max MHz.*?([\d]+)/)[1];
+			  const f0 = value.match(/cpu MHz.*?([\d]+)/)[1];
+			  const f1 = value.match(/cpu min MHz.*?([\d]+)/)[1];
+			  const f2 = value.match(/cpu max MHz.*?([\d]+)/)[1];
 			  return `CPU实时: ${f0} MHz | 最小: ${f1} MHz | 最大: ${f2} MHz `
             }
 	},
