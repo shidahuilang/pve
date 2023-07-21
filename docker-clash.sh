@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash
 
 read -p "请输入 IP 或者域名：" IP
 
