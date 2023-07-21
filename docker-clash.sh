@@ -50,7 +50,7 @@ docker run -d \
 --name Subconverter \
 --restart=unless-stopped \
 -p 25500:25500 \
--v /opt/subconverter/subconverter/subconverter:/usr/bin/subconverter \
+-v /root/subconverter/subconverter/subconverter:/usr/bin/subconverter \
 tindy2013/subconverter:latest
 
 echo "Sub-Web 已经启动，访问 http://$IP:25501 即可使用。"
