@@ -35,6 +35,22 @@ rm -rf /root/sub-web/
 docker run -d -p 25501:80 --restart unless-stopped --name Sub-Web sub-web:latest
 
 # 处理订阅链接后端
-docker run -d --name Subconverter --restart=unless-stopped -p 25500:25500 tindy2013/subconverter:latest
+docker pull tindy2013/subconverter:latest
+
+# 新建subconverter目录下载二进制文件
+mkdir -p /root/subconverter
+cd /root/subconverter
+wget https://ghproxy.com/https://github.com/MetaCubeX/subconverter/releases/latest/download/subconverter_linux64.tar.gz
+
+# 解压二进制文件
+tar -zxf subconverter_linux64.tar.gz
+
+# 运行容器
+docker run -d \
+--name Subconverter \
+--restart=unless-stopped \
+-p 25500:25500 \
+-v /opt/subconverter/subconverter/subconverter:/usr/bin/subconverter \
+tindy2013/subconverter:latest
 
 echo "Sub-Web 已经启动，访问 http://$IP:25501 即可使用。"
