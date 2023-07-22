@@ -10,3 +10,8 @@
 ```sh  
 qm importdisk 104 /var/lib/vz/template/iso/1.img local-lvm
 ```sh
+- ### PVE-LXC容器换源
+```sh
+sed -i 's|http://download.proxmox.com|https://mirrors.tuna.tsinghua.edu.cn/proxmox|g' /usr/share/perl5/PVE/APLInfo.pm
+systemctl restart pvedaemon.service
+```sh
