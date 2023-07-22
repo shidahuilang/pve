@@ -7,6 +7,10 @@
 ```sh
 /etc/pve/qemu-serve
 ```
+- ### LXC路径
+```sh
+/etc/pve/nodes/pve/lxc
+```
 - ### 无需借助任何软件直接转换openwrt的img文件为虚拟磁盘
 ```sh  
 qm importdisk 104 /var/lib/vz/template/iso/1.img local-lvm
