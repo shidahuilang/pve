@@ -51,3 +51,4 @@ bash -c  "$(curl -fsSL https://ghproxy.com/https://raw.githubusercontent.com/shi
 ```sh
 apt update && apt dist-upgrade -y
 ```
+[![Stargazers over time](https://starchart.cc/shidahuilang/pve.svg)](https://starchart.cc/shidahuilang/pve)
