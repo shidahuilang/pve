@@ -1,5 +1,6 @@
 #### 🚩 「Douyin_TikTok_Download_API」是一个开箱即用的高性能异步抖音|TikTok数据爬取工具，支持API调用，在线批量解析及下载
-先下载配置文件放入docker需要映射的目录，config.ini里面可以修改默认端口
+#### 🚩 先下载配置文件放入docker需要映射的目录，config.ini里面可以修改默认端口
+#### 🚩 项目地主：https://github.com/Evil0ctal/Douyin_TikTok_Download_API
 
 #### 🚩 下载配置文件config.ini里面可以修改默认端口
 ```sh
