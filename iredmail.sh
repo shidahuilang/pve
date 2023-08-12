@@ -1,20 +1,37 @@
 #!/bin/bash
 
+# 提示用户输入主机名
+read -p "请输入主机名如：mail.mydomain.com: " hostname
+
+# 提示用户输入首个邮件域名
+read -p "请输入首个邮件域名如：mydomain.com: " maildomain
+
+# 提示用户输入首个邮件域管理员密码
+read -s -p "请输入首个邮件域管理员密码: " adminpassword
+echo
+
+# 提示用户输入MLMMJ API Token（可选）
+read -p "请输入MLMMJ API Token（可选）: " mlmmjtoken
+
+# 提示用户输入要映射的主机端口
+read -p "请输入要映射的主机端口 (默认为80): " hostport
+hostport=${hostport:-80}  # 如果用户未输入，则使用默认值80
+
 # 创建一个目录来存储iRedMail数据
-mkdir /iredmail
+mkdir /root/iredmail
 
 # 进入目录并创建一个iRedMail配置文件
-cd /iredmail
+cd /root/iredmail
 touch iredmail-docker.conf
 
 # 向配置文件中添加必要的信息
-echo HOSTNAME=mail.mydomain.com >> iredmail-docker.conf # 设置主机名
-echo FIRST_MAIL_DOMAIN=mydomain.com >> iredmail-docker.conf # 设置首个邮件域名
-echo FIRST_MAIL_DOMAIN_ADMIN_PASSWORD=dahuilang >> iredmail-docker.conf # 设置首个邮件域管理员密码
-echo MLMMJADMIN_API_TOKEN= >> iredmail-docker.conf # 设置MLMMJ API Token（可选）
+echo "HOSTNAME=$hostname" >> iredmail-docker.conf
+echo "FIRST_MAIL_DOMAIN=$maildomain" >> iredmail-docker.conf
+echo "FIRST_MAIL_DOMAIN_ADMIN_PASSWORD=$adminpassword" >> iredmail-docker.conf
+echo "MLMMJADMIN_API_TOKEN=$mlmmjtoken" >> iredmail-docker.conf
 
 # 生成一个随机的Roundcube密钥并添加到配置文件中
-echo ROUNDCUBE_DES_KEY=$(openssl rand -base64 24) >> iredmail-docker.conf
+echo "ROUNDCUBE_DES_KEY=$(openssl rand -base64 24)" >> iredmail-docker.conf
 
 # 创建iRedMail数据目录结构
 mkdir -p data/{backup-mysql,clamav,custom,imapsieve_copy,mailboxes,mlmmj,mlmmj-archive,mysql,sa_rules,ssl,postfix_queue}
@@ -24,8 +41,8 @@ docker run \
 --rm \
 --name iredmail \
 --env-file iredmail-docker.conf \
---hostname mail.mydomain.com \
--p 80:80 \
+--hostname $hostname \
+-p $hostport:80 \
 -p 443:443 \
 -p 110:110 \
 -p 995:995 \
