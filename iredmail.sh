@@ -1,4 +1,5 @@
-#!/bin/bash 
+#!/bin/bash
+## by:dahuilang
 
 # 提示用户输入主机名
 read -p "请输入主机名如：mail.mydomain.com: " hostname
