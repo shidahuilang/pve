@@ -3,7 +3,7 @@
 
 #### 🚩 下载配置文件config.ini里面可以修改默认端口
 ```sh
-wget  https://raw.githubusercontent.com/shidahuilang/pve/main/tiktok/config.ini
+wget https://raw.githubusercontent.com/shidahuilang/pve/main/tiktok/Douyin_TikTok_Download_API/config.ini
 或下载作者的config.ini文件  修改Web_APP里面的80端口
 wget  https://raw.githubusercontent.com/Evil0ctal/Douyin_TikTok_Download_API/main/config.ini
 ```
