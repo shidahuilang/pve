@@ -80,10 +80,10 @@ elif [[ $choice =~ ^[Uu]$ ]]; then
         rm -rf /root/subconverter/
 
         # 删除 Sub-Web 镜像
-        docker rmi sub-web:latest
+        docker image rmi -f sub-web:latest
 
         # 删除 Subconverter 镜像
-        docker rmi tindy2013/subconverter:latest
+        docker image rmi -f tindy2013/subconverter:latest
 
         echo "Sub-Web 应用已成功卸载。"
     else
