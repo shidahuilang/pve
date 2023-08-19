@@ -55,8 +55,8 @@ read -p "请输入新的MAC地址(按回车键确定)    " NEWMAC
 echo -e "$green新MAC地址为$NEWMAC..$plain"
 echo -e "$green正在替换MAC地址..$plain"
 sleep 1
-sed -i "s/$SN/$NEWSN/g" /tmp/boot/user-config.yml
-sed -i "s/$MAC/$NEWMAC/g" /tmp/boot/user-config.yml
+sed -i "s/$SN/$NEWSN,g" /tmp/boot/user-config.yml
+sed -i "s/$MAC/$NEWMAC,g" /tmp/boot/user-config.yml
 if [ $? == 0 ]; then
     echo -e "$green恭喜您，序列号和MAC地址替换成功！请重启系统使配置生效！在控制面板-信息中心查看是否成功。$plain"
 else
