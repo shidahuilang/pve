@@ -499,8 +499,8 @@ cat > $tmpf << 'EOF'
           textField: 'cpusensors',
           renderer:function(value){
 			  const f0 = value.match(/cpu MHz.*?([\d]+)/)[1];
-			  const f1 = value.match(/cpu min MHz.*?([\d]+)/)[1];
-			  const f2 = value.match(/cpu max MHz.*?([\d]+)/)[1];
+			  const f1 = value.match(/CPU min MHz.*?([\d]+)/)[1];
+			  const f2 = value.match(/CPU max MHz.*?([\d]+)/)[1];
 			  return `CPU实时: ${f0} MHz | 最小: ${f1} MHz | 最大: ${f2} MHz `
             }
 	},
