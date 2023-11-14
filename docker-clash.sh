@@ -45,7 +45,7 @@ if [[ $choice =~ ^[Aa]$ ]]; then
     # 新建subconverter目录下载二进制文件
     mkdir -p /root/subconverter
     cd /root/subconverter
-    wget https://ghproxy.com/https://github.com/MetaCubeX/subconverter/releases/latest/download/subconverter_linux64.tar.gz
+    wget https://github.com/MetaCubeX/subconverter/releases/latest/download/subconverter_linux64.tar.gz
 
     # 解压二进制文件
     tar -zxf subconverter_linux64.tar.gz
