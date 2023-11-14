@@ -16,7 +16,7 @@ if [[ $choice =~ ^[Aa]$ ]]; then
     # 复制补丁文件
     cp -R /root/subweb/subweb/* "/root/sub-web/"
     cp -R "/root/subweb/subweb/.env" "/root/sub-web/.env"
-    cp -R "/root/subweb/subweb/Subconverter.vue" "/root/sub-web/src/views/Subconverter.vue"
+    cp -R "/root/subweb/subweb/src/views/Subconverter.vue" "/root/sub-web/src/views/Subconverter.vue"
 
     # 修改 IP 地址
     sed -i "s/127.0.0.1/$IP/g" "/root/sub-web/.env"
