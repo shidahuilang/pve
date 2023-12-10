@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 提示用户输入交换文件大小
-read -p "Enter the swap file size (e.g., 2G, 4G): " swap_size
+read -p "请输入增加交换的大小（例如，2G，4G）：" swap_size
 
 # 创建交换文件
 sudo fallocate -l $swap_size /swapfile
