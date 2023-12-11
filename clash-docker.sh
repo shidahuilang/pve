@@ -57,7 +57,7 @@ tindy2013/subconverter:latest
 # 删除多余文件
 rm -rf /root/subconverter && rm -rf /root/subconverter_linux64.tar.gz
 
-echo "Sub-Web 已经启动，访问 http://$IP:25501 即可使用。"
+echo "Sub-Web 已经启动，访问 http://$IP:25510 即可使用。"
 
 elif [[ $choice =~ ^[Uu]$ ]]; then
 # 卸载操作
