@@ -55,9 +55,6 @@ docker run -d \
 -v /root/subconverter/subconverter/subconverter:/usr/bin/subconverter \
 tindy2013/subconverter:latest
 
-# 删除多余文件
-#rm -r /root/subconverter
-
 echo "Sub-Web 已经启动，访问 http://$IP:25510 即可使用。"
 
 elif [[ $choice =~ ^[Uu]$ ]]; then
