@@ -72,7 +72,7 @@ docker rm Subconverter
 
 # 删除 Sub-Web相关的文件和目录
 rm -rf /root/sub-web-modify/
-
+rm -r /root/subconverter
 # 删除 Sub-Web 镜像
 docker image rmi -f sub-web-modify:latest
 
