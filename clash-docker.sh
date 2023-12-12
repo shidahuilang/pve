@@ -7,6 +7,7 @@ read -p "请选择操作：安装(A) / 卸载(U): " choice
 if [[ $choice =~ ^[Aa]$ ]]; then
 # 安装操作
 rm -rf /root/sub-web-modify
+
 # 下载 sub-web 源码
 git clone https://github.com/youshandefeiyang/sub-web-modify.git sub-web-modify
 
@@ -55,7 +56,7 @@ docker run -d \
 tindy2013/subconverter:latest
 
 # 删除多余文件
-rm -rf /root/subconverter && rm -rf /root/subconverter_linux64.tar.gz
+rm -r /root/subconverter
 
 echo "Sub-Web 已经启动，访问 http://$IP:25510 即可使用。"
 
@@ -72,9 +73,8 @@ docker rm sub-web-modify
 docker stop Subconverter
 docker rm Subconverter
 
-# 删除 Sub-Web 和 Subconverter 相关的文件和目录
+# 删除 Sub-Web相关的文件和目录
 rm -rf /root/sub-web-modify/
-rm -rf /root/subconverter/
 
 # 删除 Sub-Web 镜像
 docker image rmi -f sub-web-modify:latest
