@@ -62,4 +62,8 @@ if [ $? == 0 ]; then
 else
     echo -e "$red序列号和MAC地址替换失败！$plain" && exit 1
 fi
-echo -e "${green}请重启系统以使更改生效。${plain}"
+
+# 卸载分区
+umount /tmp/boot
+
+echo -e "${green}umount /tmp/boot卸载分区，重启系统以使更改生效。${plain}"
