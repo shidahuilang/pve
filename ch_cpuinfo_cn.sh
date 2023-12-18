@@ -1,7 +1,9 @@
 #!/bin/sh
-ver="3.3.1-r01"
+# Updated 2023.03.05 - By FOXBI
+# htttps://github.com/foxbi/ch_cpuinfo
+ver="4.2.1-r01"
 # ==============================================================================
-# Location Check.
+# Location Check
 # ==============================================================================
 
 wget -O LANG.txt http://code.imnks.com/ch_cpuinfo/LANG.txt
@@ -89,17 +91,31 @@ PREPARE_FN () {
             tar -cf $BKUP_DIR/$TIME/admin_center.tar admin_center.js*
             cd $MWORK_DIR
             tar -cf $BKUP_DIR/$TIME/mobile.tar mobile.js*
+            if [ -f "$SWORK_DIR/System.js" ]
+            then
+                cd $SWORK_DIR
+                tar -cf $BKUP_DIR/$TIME/System.tar System.js*
+                cp -Rf $SWORK_DIR/System.js $BKUP_DIR/
+            fi
         fi
         if [ "$MA_VER" -eq "6" ] && [ "$MI_VER" -ge "2" ]
         then
             mv $WORK_DIR/admin_center.js.gz $BKUP_DIR/
             mv $MWORK_DIR/mobile.js.gz $BKUP_DIR/
+            if [ -f "$SWORK_DIR/System.js" ]
+            then              
+                cp -Rf $SWORK_DIR/System.js $BKUP_DIR/
+            fi
 	        cd $BKUP_DIR/
             gzip -df $BKUP_DIR/admin_center.js.gz 
-            gzip -df $BKUP_DIR/mobile.js.gz        
+            gzip -df $BKUP_DIR/mobile.js.gz
         else
             cp -Rf $WORK_DIR/admin_center.js $BKUP_DIR/
             cp -Rf $MWORK_DIR/mobile.js $BKUP_DIR/
+            if [ -f "$SWORK_DIR/System.js" ]
+            then            
+                cp -Rf $SWORK_DIR/System.js $BKUP_DIR/
+            fi
         fi
     else
         COMMENT08_FN
@@ -112,30 +128,113 @@ GATHER_FN () {
     then
         cpu_vendor="AMD"
     else
-        cpu_vendor="Intel"
+        cpu_vendor_chk=`cat /proc/cpuinfo | grep model | grep name | sort -u | sed "s/(.)//g" | sed "s/(..)//g" | sed "s/CPU//g" | grep Intel | wc -l`
+        if [ "$cpu_vendor_chk" -gt "0" ]
+        then
+            cpu_vendor="Intel"
+        else    
+            cpu_vendor=`cat /proc/cpuinfo | grep Hardware | sort -u | awk '{print $3}' | head -1`
+            if [ -z "$cpu_vendor" ]
+            then
+                cpu_vendor=`cat /proc/cpuinfo grep model | grep name | sort -u | awk '{print $3}' | head -1`
+            fi
+        fi
     fi
     if [ "$cpu_vendor" == "AMD" ]
     then
-        cpu_family=`cat /proc/cpuinfo | grep model | grep name | sort -u | awk -F: '{print $2}' | sed "s/^\s*AMD//g" | sed "s/^\s//g" | awk '{if($NF=="Processor") {print $0|"sed \"s/ Processor//g\""} else {$NF="";print $0}}' | head -1`
-        cpu_series=`cat /proc/cpuinfo | grep model | grep name | sort -u | awk '{print $NF}' | head -1`
-    else
-        cpu_family=`cat /proc/cpuinfo | grep model | grep name | sort -u | sed "s/(.)//g" | sed "s/(..)//g" | sed "s/CPU//g" | awk '{if($4=="Intel") {print $5} else {print $4}}' | head -1`
-        cpu_series=`cat /proc/cpuinfo | grep model | grep name | sort -u | sed "s/(.)//g" | sed "s/(..)//g" | sed "s/CPU//g" | awk '{if(index($6,"@")!=0) {print "Unkown"} else {if(index($7,"@")!=0) {if($6=="0000") {print "ES"} else {print $6}} else {print $6" "$7}}}' | head -1`
-    fi        
+        pro_cnt=`cat /proc/cpuinfo | grep model | grep name | sort -u | awk -F: '{print $2}' | sed "s/^\s*AMD//g" | sed "s/^\s//g" | head -1 | grep -wi "PRO" | wc -l`
+        if [ "$pro_cnt" -gt 0 ]
+        then
+            pro_chk="-wi PRO"
+        else
+            pro_chk="-v PRO"
+        fi
+        cpu_series=`cat /proc/cpuinfo | grep model | grep name | sort -u | awk -F: '{print $2}' | sed "s/^\s*AMD//g" | sed "s/^\s//g" | head -1 | awk '{ for(i = NF; i > 1; i--) if ($i ~ /^[0-9]/) { for(j=i;j<=NF;j++)printf("%s ", $j);print("\n");break; }}' | sed "s/ *$//g"`
+        if  [ -z "$cpu_series" ]
+        then
+            cpu_series=`cat /proc/cpuinfo | grep model | grep name | sort -u | awk -F: '{print $2}' | sed "s/^\s*AMD//g" | sed "s/^\s//g" | head -1 | awk '{ for(i = NF; i >= 1; i--) if ($i ~ ".*-.*") { print $i }}' | sed "s/ *$//g"`
+        fi
+        cpu_family=`cat /proc/cpuinfo | grep model | grep name | sort -u | awk -F: '{print $2}' | sed "s/^\s*AMD//g" | sed "s/^\s//g" | head -1 | awk -F"$cpu_series" '{print $1}' | sed "s/ *$//g"`
+    elif [ "$cpu_vendor" == "Intel" ]
+    then
+        cpu_family=`cat /proc/cpuinfo | grep model | grep name | sort -u | awk '{ for(i = 1; i < NF; i++) if ($i ~ /^Intel/) { for(j=i;j<=NF;j++)printf("%s ", $j);printf("\n") }}' | awk -F@ '{ print $1 }' | sed "s/(.)//g" | sed "s/(..)//g" | sed "s/ CPU//g" | awk '{print $2}' | head -1 | sed "s/ *$//g"`
+        cpu_series=`cat /proc/cpuinfo | grep model | grep name | sort -u | awk '{ for(i = 1; i < NF; i++) if ($i ~ /^Intel/) { for(j=i;j<=NF;j++)printf("%s ", $j);printf("\n") }}' | awk -F@ '{ print $1 }' | sed "s/(.)//g" | sed "s/(..)//g" | sed "s/ CPU//g" | awk -F"$cpu_family " '{print $2}' | head -1 | sed "s/ *$//g"`
+        if [ -z "$cpu_series" ]
+        then
+            cpu_series="Unknown"
+        fi
+        if [ "$cpu_family" == "Pentium" ]
+        then
+            cpu_series_b="$cpu_series"
+            cpu_series="$cpu_family $cpu_series"
+        else
+            m_chk=`echo "$cpu_series" | grep -wi ".* M .*" | wc -l`
+            if [ "$m_chk" -gt 0 ]
+            then
+                cpu_series=`echo "$cpu_series" | sed "s/ M /-/g" | awk '{print $0"M"}'`
+            fi
+        fi
+    else    
+        cpu_family=`cat /proc/cpuinfo | grep model | grep name | sort -u | awk -F: '{print $2}' | sed "s/^\s*$cpu_vendor//g" | sed "s/^\s//g" | head -1`
+        cpu_series=""    
+    fi
     if [ "$cpu_vendor" == "Intel" ]
     then
         if [ "$cpu_series" == "ES" ] || [ "$cpu_series" == "Unkown" ]
         then
             cpu_detail="<a href='https:\/\/ark.intel.com\/content\/www\/us\/en\/ark.html' target=_blank>查找<\/a>"
         else
-            cpu_detail="<a href='https:\/\/ark.intel.com\/content\/www\/us\/en\/ark\/search.html?_charset_=UTF-8\&q=$cpu_series' target=_blank>详情<\/a>"
+            cpu_search="https://ark.intel.com/content/www/us/en/ark/search.html?_charset_=UTF-8&q=$cpu_series"
+            temp_file="/tmp/cpu_info_temp_url.txt"
+            wget -q -O $temp_file "$cpu_search"
+            url_cnt=`cat $temp_file | grep "FormRedirectUrl" | grep "hidden" | wc -l`
+            if [ "$url_cnt" -gt 0 ]
+            then
+                gen_url=`cat $temp_file | grep "FormRedirectUrl" | grep "hidden" | awk -F"value" '{print $2}' | awk -F\" '{print $2}'`
+            else
+                gen_url=`cat $temp_file | grep -wi "$cpu_series" | grep "href" | awk -F"href" '{print $2}' | awk -F\" '{print $2}'`
+                if [ "$cpu_family" == "Pentium" ]
+                then
+                    chg_series=`echo $cpu_series | awk '{print "\\\-"$1"\\\-"$2"\\\-"}'`
+                    gen_url=`cat $temp_file | grep -i "$chg_series" | grep "href" | awk -F"href" '{print $2}' | awk -F\" '{print $2}' | head -1`
+                    cpu_series="$cpu_series_b"
+                fi            
+                if [ -z "$gen_url" ]
+                then
+                    chg_series=`echo $cpu_series | awk '{print "\\\-"$1".*"$2"\\\-"}'`
+                    gen_url=`cat $temp_file | grep -i "$chg_series" | grep "href" | awk -F"href" '{print $2}' | awk -F\" '{print $2}' | head -1`
+                fi
+            fi
+            cpu_gen=`curl --silent https://ark.intel.com$gen_url | grep "Products formerly" | awk -F"Products formerly " '{print $2}' | sed "s/<\/a>//g"`
+            gen_url=`echo $gen_url | sed "s/\//\\\\\\\\\//g"`
+            cpu_detail="($cpu_gen) <a href='https:\/\/ark.intel.com$gen_url' target=_blank>详情<\/a>"            
         fi
     elif [ "$cpu_vendor" == "AMD" ]
     then
-        cpu_detail="<a href='https:\/\/www.amd.com\/partner\/processor-specifications' target=_blank>detail<\/a>"
+        cpu_search=`echo "$cpu_series" | awk '{print $1" "$2}'`
+        gen_url=`curl --silent -H "user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.182 Safari/537.36" http://stackoverflow.com/questions/28760694/how-to-use-curl-to-get-a-get-request-exactly-same-as-using-chrome \
+                    https://www.amd.com/en/products/specifications/processors | grep -wi "$cpu_search" | grep $pro_chk | awk -F"views-field" '{print $1}' | awk -F"entity-" '{print $2}'`
+        if [ -z "$gen_url" ]
+        then
+            chg_series=`echo $cpu_series | awk '{print $1}'`
+            gen_url=`curl --silent -H "user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.182 Safari/537.36" http://stackoverflow.com/questions/28760694/how-to-use-curl-to-get-a-get-request-exactly-same-as-using-chrome \
+                    https://www.amd.com/en/products/specifications/processors | grep -wi "$chg_series" | grep $pro_chk | awk -F"views-field" '{print $1}' | awk -F"entity-" '{print $2}'`
+        fi
+        if [ -z "$gen_url" ]
+        then
+            cpu_series=`cat /proc/cpuinfo | grep model | grep name | sort -u | awk -F: '{print $2}' | sed "s/^\s*AMD//g" | sed "s/^\s//g" | head -1 | awk '{ for(i = NF; i >= 1; i--) if ($i ~ ".*-.*") { print $i }}' | sed "s/ *$//g"`
+            cpu_family=`cat /proc/cpuinfo | grep model | grep name | sort -u | awk -F: '{print $2}' | sed "s/^\s*AMD//g" | sed "s/^\s//g" | head -1 | awk -F"$cpu_series" '{print $1}' | sed "s/ *$//g"`    
+            chg_series=`echo $cpu_series | awk '{print $1}'`
+            gen_url=`curl --silent -H "user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.182 Safari/537.36" http://stackoverflow.com/questions/28760694/how-to-use-curl-to-get-a-get-request-exactly-same-as-using-chrome \
+                    https://www.amd.com/en/products/specifications/processors | grep -wi "$chg_series" | grep $pro_chk | awk -F"views-field" '{print $1}' | awk -F"entity-" '{print $2}'`        
+        fi
+        cpu_gen=`curl --silent -H "user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.182 Safari/537.36" http://stackoverflow.com/questions/28760694/how-to-use-curl-to-get-a-get-request-exactly-same-as-using-chrome \
+                https://www.amd.com/en/product/$gen_url | egrep -A 2 -w ">Former Codename<|>Architecture<" | grep "field__item" | sed "s/&quot;/\"/g" | awk -F\"\>\" '{print $2}' | awk -F\" '{print $1}' | tr "\n" "| " | awk -F\| '{if($2=="") {print $1} else {print $1" | " $2}}'`
+        cpu_detail="($cpu_gen) <a href='https:\/\/www.amd.com\/en\/product\/$gen_url' target=_blank>详情<\/a>"                
     else
         cpu_detail=""
-    fi
+    fi    
+
     PICNT=`cat /proc/cpuinfo | grep "^physical id" | sort -u | wc -l`
     CICNT=`cat /proc/cpuinfo | grep "^core id" | sort -u | wc -l`
     CCCNT=`cat /proc/cpuinfo | grep "^cpu cores" | sort -u | awk '{print $NF}'`
@@ -187,13 +286,22 @@ PERFORM_FN () {
             then
                 cpu_info=`echo "${dt}.cpu_vendor=\"${cpu_vendor}\",${dt}.cpu_family=\"${cpu_family}\",${dt}.cpu_series=\"${cpu_series}\",${dt}.cpu_cores=\"${cpu_cores}\",${dt}.cpu_detail=\"${cpu_detail}\","`
                 sed -i "s/Ext.isDefined(${dt}.cpu_vendor/${cpu_info}Ext.isDefined(${dt}.cpu_vendor/g" $BKUP_DIR/admin_center.js
+                if [ -f "$BKUP_DIR/System.js" ]
+                then
+                    cpu_info_s=`echo ${cpu_info} | sed "s/${dt}.cpu/${st}.cpu/g"`
+                    sed -i "s/Ext.isDefined(${st}.cpu_vendor/${cpu_info_s}Ext.isDefined(${st}.cpu_vendor/g" $BKUP_DIR/System.js
+                fi
             else
                 cpu_info=`echo "${dt}.cpu_vendor=\"${cpu_vendor}\";${dt}.cpu_family=\"${cpu_family}\";${dt}.cpu_series=\"${cpu_series}\";${dt}.cpu_cores=\"${cpu_cores}\";${dt}.cpu_detail=\"${cpu_detail}\";"`
                 sed -i "s/if(Ext.isDefined(${dt}.cpu_vendor/${cpu_info}if(Ext.isDefined(${dt}.cpu_vendor/g" $BKUP_DIR/admin_center.js
             fi
             sed -i "s/${dt}.cpu_series)])/${dt}.cpu_series,${dt}.cpu_detail)])/g" $BKUP_DIR/admin_center.js
             sed -i "s/{2}\",${dt}.cpu_vendor/{2} {3}\",${dt}.cpu_vendor/g" $BKUP_DIR/admin_center.js
-
+            if [ -f "$BKUP_DIR/System.js" ]
+            then
+                sed -i "s/${st}.cpu_series)])/${st}.cpu_series,${st}.cpu_detail)])/g" $BKUP_DIR/System.js
+                sed -i "s/{2}\",${st}.cpu_vendor/{2} {3}\",${st}.cpu_vendor/g" $BKUP_DIR/System.js                  
+            fi
             cpu_info_m=`echo "{name: \"cpu_series\",renderer: function(value){var cpu_vendor=\"${cpu_vendor}\";var cpu_family=\"${cpu_family}\";var cpu_series=\"${cpu_series}\";var cpu_cores=\"${cpu_cores}\";return Ext.String.format('{0} {1} {2} [ {3} ]', cpu_vendor, cpu_family, cpu_series, cpu_cores);},label: _T(\"status\", \"cpu_model_name\")},"`
             sed -i "s/\"ds_model\")},/\"ds_model\")},${cpu_info_m}/g" $BKUP_DIR/mobile.js
         else
@@ -215,10 +323,15 @@ APPLY_FN () {
     then    
         cp -Rf $BKUP_DIR/admin_center.js $WORK_DIR/
         cp -Rf $BKUP_DIR/mobile.js $MWORK_DIR/
+        if [ -f "$BKUP_DIR/System.js" ]
+        then
+            cp -Rf $BKUP_DIR/System.js $SWORK_DIR/
+            rm -rf $BKUP_DIR/System.js
+        fi     
         if [ "$MA_VER" -eq "6" ] && [ "$MI_VER" -lt "2" ]
         then
             rm -rf $BKUP_DIR/admin_center.js
-            rm -rf $BKUP_DIR/mobile.js        
+            rm -rf $BKUP_DIR/mobile.js   
         else
             gzip -f $BKUP_DIR/admin_center.js
             gzip -f $BKUP_DIR/mobile.js
@@ -239,6 +352,11 @@ RECOVER_FN () {
         then
             cd $MWORK_DIR
             tar -xf $BKUP_DIR/$TIME/mobile.tar
+        fi
+        if [ -f "$BKUP_DIR/$TIME/System.tar" ]
+        then
+            cd $SWORK_DIR
+            tar -xf $BKUP_DIR/$TIME/System.tar
         fi
         if [ "$re_check" == "y" ]
         then
@@ -268,9 +386,13 @@ RERUN_FN () {
         then
             if [ "$MA_VER" -ge "7" ]
             then
-                info_cnt=`cat $WORK_DIR/admin_center.js | egrep "t.model\]\),Ext.isDefined\(t.cpu_vendor" | wc -l`
+                info_cnt=`cat $WORK_DIR/admin_center.js | egrep "${dt}.model\]\),Ext.isDefined\(${dt}.cpu_vendor" | wc -l`
+                if [ -f "$BKUP_DIR/System.js" ]
+                then
+                    info_cnt_s=`cat $WORK_DIR/admin_center.js | egrep "${st}.model\]\),Ext.isDefined\(${st}.cpu_vendor" | wc -l`
+                fi                
             else
-                info_cnt=`cat $WORK_DIR/admin_center.js | egrep ".model\]\);if\(Ext.isDefined|.model\]\)\}if\(Ext.isDefined" | wc -l`
+                info_cnt=`cat $WORK_DIR/admin_center.js | egrep ".model\]\);if\(Ext.isDefined|.model\]\)\}if\(Ext.isDefined" | wc -l`              
             fi
             info_cnt_m=`cat $MWORK_DIR/mobile.js | grep "ds_model\")},{name:\"ram_size" | wc -l`
             if [ "$info_cnt" -eq "0" ] && [ "$info_cnt_m" -eq "0" ]
@@ -285,6 +407,7 @@ RERUN_FN () {
                     if [ "$MA_VER" -ge "7" ]
                     then
                         cpu_info="${dt}.cpu_vendor=\\\"${cpu_vendor}\\\",${dt}.cpu_family=\\\"${cpu_family}\\\",${dt}.cpu_series=\\\"${cpu_series}\\\",${dt}.cpu_cores=\\\"${cpu_cores}\\\",${dt}.cpu_detail=\\\"${cpu_detail}\\\","
+                        cpu_info_s="${st}.cpu_vendor=\\\"${cpu_vendor}\\\",${st}.cpu_family=\\\"${cpu_family}\\\",${st}.cpu_series=\\\"${cpu_series}\\\",${st}.cpu_cores=\\\"${cpu_cores}\\\",${st}.cpu_detail=\\\"${cpu_detail}\\\","
                     else
                         cpu_info="${dt}.cpu_vendor=\\\"${cpu_vendor}\\\";${dt}.cpu_family=\\\"${cpu_family}\\\";${dt}.cpu_series=\\\"${cpu_series}\\\";${dt}.cpu_cores=\\\"${cpu_cores}\\\";${dt}.cpu_detail=\\\"${cpu_detail}\\\";"
                     fi
@@ -439,6 +562,8 @@ CASE_FN () {
 EXEC_FN () {
 if [ -d $WORK_DIR ]
 then
+    Y_N="y"
+    : '
     if [ "$LC_CHK" == "CUSTOMLANG" ]
     then
         READ_YN "$MSGECHO04 "
@@ -448,6 +573,7 @@ then
     else
         READ_YN "Auto Excute, If you select n, proceed interactively  (Cancel : q) [y/n] : "
     fi
+    ' :
     if [ "$Y_N" == "y" ]
     then
         mkdir -p $BKUP_DIR/$TIME
@@ -627,12 +753,24 @@ COMMENT08_FN () {
 COMMENT09_FN () {
     if [ "$LC_CHK" == "CUSTOMLANG" ]
     then
-        echo -e "$MSGECHO13"
+        if [ -f "$SWORK_DIR/System.js" ]
+        then
+            echo -e "$MSGECHO13"
+        fi
+        echo -e "$MSGECHO13"        
     elif [ "$LC_CHK" == "Seoul" ]
     then
-        echo -e "작업이완료 되었습니다!! 반영에는 약 1~2분 소요되며, \n(F5로 DSM 페이지 새로고침 후 또는 로그아웃/로그인 후 정보를 확인바랍니다.)"
+        if [ -f "$SWORK_DIR/System.js" ]
+        then
+            echo -e "Surveillance Studio를 사용하는 경우 Surveillance Studio 시스템 정보에도 반영됩니다."
+        fi
+        echo -e "작업이완료 되었습니다!! 반영에는 약 1~2분 소요되며, \n(F5로 DSM 페이지 새로고침 후 또는 로그아웃/로그인 후 정보를 확인바랍니다."        
     else
-        echo -e "The operation is complete!! It takes about 1-2 minutes to reflect, \n(Please refresh the DSM page with F5 or after logout/login and check the information.)"
+        if [ -f "$SWORK_DIR/System.js" ]
+        then
+            echo -e "If you use Surveillance Studio, it also applies to Surveillance Studio System Information."
+        fi
+        echo -e "The operation is complete!! It takes about 1-2 minutes to apply, \n(Please refresh the DSM page with F5 or after logout/login and check the information.)"        
     fi
     exit 0
 }
@@ -655,13 +793,14 @@ COMMENT10_FN () {
 # ==============================================================================
 clear
 WORK_DIR="/usr/syno/synoman/webman/modules/AdminCenter"
+SWORK_DIR="/var/packages/SurveillanceStation/target/ui/modules/System"
 MWORK_DIR="/usr/syno/synoman/mobile/ui"
 BKUP_DIR="/root/Xpenology_backup"
 VER_DIR="/etc.default"
 
 if [ "$LC_CHK" == "CUSTOMLANG" ]
 then
-    cecho c "$MSGECHO15\033[0;31m"$ver"\033[00m - $MSGECHO16 FOXBI 中文翻译：IMNKS.COM\n"
+    cecho c "$MSGECHO15\033[0;31m"$ver"\033[00m - $MSGECHO16 FOXBI\n"
 elif [ "$LC_CHK" == "Seoul" ]
 then
     cecho c "DSM CPU 정보 변경 도구 ver. \033[0;31m"$ver"\033[00m - FOXBI 제작\n"
@@ -730,6 +869,7 @@ then
     if [ "$MA_VER" -ge "7" ]
     then
         dt=t
+        st=e        
     else
         if [ "$BL_NUM" -ge "24922" ]
         then
@@ -749,8 +889,10 @@ fi
 
 GATHER_FN
 
-cpu_cores=`echo ${cpu_cores} | sed 's/\\\//g'`
+cpu_cores=`echo ${cpu_cores}"-"${cpu_gen} | sed 's/\\\//g'`
 
+EXEC_FN
+: '
 if [ "$LC_CHK" == "CUSTOMLANG" ]
 then
     cecho g "$MSGECHO26\033[00m\n"
@@ -860,3 +1002,4 @@ else
         echo -e "Please select the correct number."
     fi
 fi
+' :
