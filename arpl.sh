@@ -1,5 +1,5 @@
 #!/usr/bin/env bash 
-# 替换黑群晖序列号进行洗白
+#替换黑群晖序列号进行洗白
 # by:shidahuilang
 
 # 颜色
@@ -11,7 +11,7 @@ plain='\033[0m'
 # 使用root运行
 [[ $EUID -ne 0 ]] && echo -e "[${red}Error${plain}] 请用root权限运行脚本!" && exit 1
 
-# 检查是否是优盘引导
+#检查是否是优盘引导
 echo -e "\n $yellow正在检查系统...$plain"
 sleep 1s
 
@@ -21,7 +21,7 @@ else
     echo -e "$red没有检测到所需文件，可能为二合一引导不适用于此脚本。$plain" && exit 1
 fi
 
-# 挂载synoboot1分区
+#挂载synoboot1分区
 echo -e "$green正在挂载分区..$plain"
 sleep 1s
 mkdir -p /tmp/boot
@@ -33,7 +33,7 @@ else
     echo -e "$red分区挂载失败！$plain" && exit 1
 fi
 
-# 检查grub文件
+#检查grub文件
 echo -e "$green运行获取grub命令!$plain"
 sleep 1s
 if [ -f /tmp/boot/user-config.yml ]; then
@@ -47,7 +47,7 @@ else
     echo -e "$red没有检测到grub文件！$plain" && exit 1
 fi
 
-# 替换序列号
+#替换序列号
 read -p "请输入新的序列号(按回车键确定)    " NEWSN
 echo -e "$green新序列号为$NEWSN..$plain"
 echo -e "$green正在替换序列号..$plain"
@@ -55,15 +55,13 @@ read -p "请输入新的MAC地址(按回车键确定)    " NEWMAC
 echo -e "$green新MAC地址为$NEWMAC..$plain"
 echo -e "$green正在替换MAC地址..$plain"
 sleep 1
-sed -i "s/^sn: .*/sn: $NEWSN/" /tmp/boot/user-config.yml
-sed -i "s/^  mac1: .*/  mac1: $NEWMAC/" /tmp/boot/user-config.yml
-
+sed -i "s/$SN/$NEWSN/g" /tmp/boot/user-config.yml
+sed -i "s/$MAC/$NEWMAC/g" /tmp/boot/user-config.yml
 if [ $? == 0 ]; then
     echo -e "$green恭喜您，序列号和MAC地址替换成功！请重启系统使配置生效！在控制面板-信息中心查看是否成功。$plain"
 else
     echo -e "$red序列号和MAC地址替换失败！$plain" && exit 1
 fi
-
 # 卸载分区
 umount /tmp/boot
 
