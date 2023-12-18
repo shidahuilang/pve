@@ -43,6 +43,13 @@ wget -qO ch_cpuinfo_cn.sh https://raw.githubusercontent.com/shidahuilang/pve/mai
 ```
 bash -c  "$(curl -fsSL https://raw.githubusercontent.com/shidahuilang/pve/main/arpl.sh)"
 ```
+- AME3.x激活补丁
+```
+# DSM7.1 AME版本3.0.1-2004
+curl http://code.imnks.com/ame3patch/ame71-2004.py | python
+# DSM7.2 AME版本3.1.0-3005
+curl http://code.imnks.com/ame3patch/ame72-3005.py | python
+```
 - 一键设置交换虚拟分区
 ```
 bash -c  "$(curl -fsSL https://raw.githubusercontent.com/shidahuilang/pve/main/swap.sh)"
