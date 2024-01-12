@@ -421,14 +421,17 @@ nodes="/usr/share/perl5/PVE/API2/Nodes.pm"
 pvemanagerlib="/usr/share/pve-manager/js/pvemanagerlib.js"
 proxmoxlib="/usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js"
 
-echo 安装lm-sensors
-apt-get install lm-sensors && apt-get install nvme-cli && apt-get install hddtemp && chmod +s /usr/sbin/nvme && chmod +s /usr/sbin/hddtemp && chmod +s /usr/sbin/smartctl
-
-echo 检测硬件信息
+echo 安装lm-sensors，并检测硬件信息
+if ! command -v sensors &> /dev/null; then
+    echo "sensors未安装，开始安装软件包，并检测硬件信息"
+    apt update -y && apt-get install lm-sensors -y && apt-get install nvme-cli -y && apt install sysstat && chmod +s /usr/sbin/nvme && chmod +s /usr/sbin/smartctl
+    
+    # 配置驱动信息完成
+    echo 检测硬件信息
 sensors-detect --auto > /tmp/sensors
 drivers=`sed -n '/Chip drivers/,/\#----cut here/p' /tmp/sensors|sed '/Chip /d'|sed '/cut/d'`
 if [ `echo $drivers|wc -w` = 0 ];then
-    echo 没有找到任何驱动，似乎你的系统不支持。
+    echo 没有找到任何驱动，似乎你的系统不支持或驱动安装失败。
     pause
     menu
 else
@@ -445,6 +448,8 @@ else
 fi
 /etc/init.d/kmod start
 rm /tmp/sensors
+# 驱动信息配置完成
+fi
 
 echo 备份源文件
 pvever=$(pveversion | awk -F"/" '{print $2}')
@@ -454,17 +459,31 @@ echo pve版本$pvever
 [ ! -e $proxmoxlib.$pvever.bak ] && cp $proxmoxlib $proxmoxlib.$pvever.bak
 
 # 生成系统变量
-therm='$res->{thermalstate} = `sensors`;';
-cpure='$res->{cpusensors} = `cat /proc/cpuinfo | grep MHz && lscpu | grep MHz`;';
-m2temp='$res->{nvme_ssd_temperatures} = `smartctl -a /dev/nvme?|grep -E "Model Number|Total NVM Capacity|Temperature:|Percentage|Data Unit|Power On Hours"`;';
-hddtempe='$res->{hdd_temperatures} = `smartctl -a /dev/sd?|grep -E "Device Model|Capacity|Power_On_Hours|Temperature"`;';
+tmpf=tmpfile.temp
+touch $tmpf
+cat > $tmpf << 'EOF' 
+	$res->{cpusensors} = `lscpu | grep MHz`;
+	$res->{thermalstate} = `sensors`;
 
+	my $nvme0_info = `smartctl -a /dev/nvme0 | grep -E "Model Number|(?=Total|Namespace)[^:]+Capacity|Temperature:|Available Spare:|Percentage|Data Unit|Power Cycles|Power On Hours|Unsafe Shutdowns|Integrity Errors"`;
+	my $nvme0_io = `iostat -d -x -k 1 1 | grep -E "^nvme0"`;
+	$res->{nvme0_status} = $nvme0_info . $nvme0_io;
+
+	$res->{hdd_temperatures} = `smartctl -a /dev/sd?|grep -E "Device Model|Capacity|Power_On_Hours|Temperature"`;
+EOF
 
 ###################  修改node.pm   ##########################
 echo 修改node.pm：
-sed -i "/PVE::pvecfg::version_text()/a $cpure\n$therm\n$m2temp\n$hddtempe" $nodes
+echo 找到关键字 PVE::pvecfg::version_text 的行号并跳到下一行
+# 显示匹配的行
+ln=$(expr $(sed -n -e '/PVE::pvecfg::version_text/=' $nodes) + 1)
+echo "匹配的行号：" $ln
+
+echo 修改结果：
+sed -i "${ln}r $tmpf" $nodes
 # 显示修改结果
-sed -n "/PVE::pvecfg::version_text()/,+5p"  $nodes
+sed -n '/PVE::pvecfg::version_text/,+6p' $nodes
+rm $tmpf
 
 
 ###################  修改pvemanagerlib.js   ##########################
@@ -504,6 +523,7 @@ cat > $tmpf << 'EOF'
 			  return `CPU实时: ${f0} MHz | 最小: ${f1} MHz | 最大: ${f2} MHz `
             }
 	},
+
 	// /* 检测不到相关参数的可以注释掉---需要的注释本行即可
 	/* 风扇转速
 	{
@@ -515,39 +535,260 @@ cat > $tmpf << 'EOF'
           renderer:function(value){
 			  const fan1 = value.match(/fan1:.*?\ ([\d.]+) R/)[1];
 			  const fan2 = value.match(/fan2:.*?\ ([\d.]+) R/)[1];
-			  return `CPU风扇: ${fan1} RPM | 系统风扇: ${fan2} RPM `
+			  if (fan1 === "0") {
+			    fan11 = "停转";
+			  } else {
+			    fan11 = fan1 + " RPM";
+			  }
+			  if (fan2 === "0") {
+			    fan22 = "停转";
+			  } else {
+			    fan22 = fan2 + " RPM";
+			  }
+			  return `CPU风扇: ${fan11} | 系统风扇: ${fan22}`
             }
 	},
 	// 检测不到相关参数的可以注释掉---需要的注释本行即可  */
+
 	// /* 检测不到相关参数的可以注释掉---需要的注释本行即可
 	// NVME硬盘温度
 	{
-          itemId: 'nvme_ssd-temperatures',
-          colspan: 2,
-          printBar: false,
-          title: gettext('NVME硬盘'),
-          textField: 'nvme_ssd_temperatures',
-          renderer:function(value){
-          if (value.length > 0) {
-          let nvmedevices = value.matchAll(/^Model.*:\s*([\s\S]*?)(\n^Total.*\[[\s\S]*?\]$|\s{0}$)\n^Temperature:\s*([\d]+)\s*Celsius\n^Percentage.*([\d]+\%)\n^Data Units.*\[([\s\S]*?)\]\n^Data Units.*\[([\s\S]*?)\]\n^Power.*:\s*([\s\S]*?)\n/gm);
-          for (const nvmedevice of nvmedevices) {
-          for (var i=5; i<8; i++) {
-          nvmedevice[i] = nvmedevice[i].replace(/ |,/gm, '');
-          }
-          if (nvmedevice[2].length > 0) {
-          let nvmecapacity = nvmedevice[2].match(/.*\[([\s\S]*?)\]/);
-          nvmecapacity = nvmecapacity[1].replace(/ /, '');
-          value = `${nvmedevice[1]} | 已使用寿命: ${nvmedevice[4]} (累计读取: ${nvmedevice[5]}, 累计写入: ${nvmedevice[6]}) | 容量: ${nvmecapacity} | 已通电: ${nvmedevice[7]}小时 | 温度: ${nvmedevice[3]}°C\n`;
-          } else {
-          value = `${nvmedevice[1]} | 已使用寿命: ${nvmedevice[4]} (累计读取: ${nvmedevice[5]}, 累计写入: ${nvmedevice[6]}) | 已通电: ${nvmedevice[7]}小时 | 温度: ${nvmedevice[3]}°C\n`;
-          }
-          }
-          return value.replace(/\n/g, '<br>');
-          } else { 
-          return `提示: 未安装硬盘或已直通硬盘控制器`;
-          }
-          }
-          },
+	    itemId: 'nvme0-status',
+	    colspan: 2,
+	    printBar: false,
+	    title: gettext('NVME 硬盘'),
+	    textField: 'nvme0_status',
+	    renderer:function(value){
+	        if (value.length > 0) {
+	            value = value.replace(/Â/g, '');
+	            let data = [];
+	            let nvmes = value.matchAll(/(^(?:Model|Total|Temperature:|Available Spare:|Percentage|Data|Power|Unsafe|Integrity Errors|nvme)[\s\S]*)+/gm);
+	            for (const nvme of nvmes) {
+	                let nvmeNumber = 0;
+	                data[nvmeNumber] = {
+	                    Models: [],
+	                    Integrity_Errors: [],
+	                    Capacitys: [],
+	                    Temperatures: [],
+	                    Available_Spares: [],
+	                    Useds: [],
+	                    Reads: [],
+	                    Writtens: [],
+	                    Cycles: [],
+	                    Hours: [],
+	                    Shutdowns: [],
+	                    States: [],
+	                    r_kBs: [],
+	                    r_awaits: [],
+	                    w_kBs: [],
+	                    w_awaits: [],
+	                    utils: []
+	                };
+
+	                let Models = nvme[1].matchAll(/^Model Number: *([ \S]*)$/gm);
+	                for (const Model of Models) {
+	                    data[nvmeNumber]['Models'].push(Model[1]);
+	                }
+
+	                let Integrity_Errors = nvme[1].matchAll(/^Media and Data Integrity Errors: *([ \S]*)$/gm);
+	                for (const Integrity_Error of Integrity_Errors) {
+	                    data[nvmeNumber]['Integrity_Errors'].push(Integrity_Error[1]);
+	                }
+
+	                let Capacitys = nvme[1].matchAll(/^(?=Total|Namespace)[^:]+Capacity:[^\[]*\[([ \S]*)\]$/gm);
+	                for (const Capacity of Capacitys) {
+	                    data[nvmeNumber]['Capacitys'].push(Capacity[1]);
+	                }
+
+	                let Temperatures = nvme[1].matchAll(/^Temperature: *([\d]*)[ \S]*$/gm);
+	                for (const Temperature of Temperatures) {
+	                    data[nvmeNumber]['Temperatures'].push(Temperature[1]);
+	                }
+
+	                let Available_Spares = nvme[1].matchAll(/^Available Spare: *([\d]*%)[ \S]*$/gm);
+	                for (const Available_Spare of Available_Spares) {
+	                    data[nvmeNumber]['Available_Spares'].push(Available_Spare[1]);
+	                }
+
+	                let Useds = nvme[1].matchAll(/^Percentage Used: *([ \S]*)%$/gm);
+	                for (const Used of Useds) {
+	                    data[nvmeNumber]['Useds'].push(Used[1]);
+	                }
+
+	                let Reads = nvme[1].matchAll(/^Data Units Read:[^\[]*\[([ \S]*)\]$/gm);
+	                for (const Read of Reads) {
+	                    data[nvmeNumber]['Reads'].push(Read[1]);
+	                }
+
+	                let Writtens = nvme[1].matchAll(/^Data Units Written:[^\[]*\[([ \S]*)\]$/gm);
+	                for (const Written of Writtens) {
+	                    data[nvmeNumber]['Writtens'].push(Written[1]);
+	                }
+
+	                let Cycles = nvme[1].matchAll(/^Power Cycles: *([ \S]*)$/gm);
+	                for (const Cycle of Cycles) {
+	                    data[nvmeNumber]['Cycles'].push(Cycle[1]);
+	                }
+
+	                let Hours = nvme[1].matchAll(/^Power On Hours: *([ \S]*)$/gm);
+	                for (const Hour of Hours) {
+	                    data[nvmeNumber]['Hours'].push(Hour[1]);
+	                }
+
+	                let Shutdowns = nvme[1].matchAll(/^Unsafe Shutdowns: *([ \S]*)$/gm);
+	                for (const Shutdown of Shutdowns) {
+	                    data[nvmeNumber]['Shutdowns'].push(Shutdown[1]);
+	                }
+
+	                let States = nvme[1].matchAll(/^nvme\S+(( *\d+\.\d{2}){22})/gm);
+	                for (const State of States) {
+	                    data[nvmeNumber]['States'].push(State[1]);
+	                    const IO_array = [...State[1].matchAll(/\d+\.\d{2}/g)];
+	                    if (IO_array.length > 0) {
+	                        data[nvmeNumber]['r_kBs'].push(IO_array[1]);
+	                        data[nvmeNumber]['r_awaits'].push(IO_array[4]);
+	                        data[nvmeNumber]['w_kBs'].push(IO_array[7]);
+	                        data[nvmeNumber]['w_awaits'].push(IO_array[10]);
+	                        data[nvmeNumber]['utils'].push(IO_array[21]);
+	                    }
+	                }
+
+	                let output = '';
+	                for (const [i, nvme] of data.entries()) {
+	                    if (nvme.Models.length > 0) {
+	                        for (const nvmeModel of nvme.Models) {
+	                            output += `${nvmeModel}`;
+	                        }
+	                    }
+
+	                    if (nvme.Integrity_Errors.length > 0) {
+	                        for (const nvmeIntegrity_Error of nvme.Integrity_Errors) {
+	                            if (nvmeIntegrity_Error != 0) {
+	                                output += ` (`;
+	                                output += `0E: ${nvmeIntegrity_Error}-故障！`;
+	                                if (nvme.Available_Spares.length > 0) {
+	                                    output += ', ';
+	                                    for (const Available_Spare of nvme.Available_Spares) {
+	                                        output += `备用空间: ${Available_Spare}`;
+	                                    }
+	                                }
+	                                output += `)`;
+	                            }
+	                        }
+	                    }
+
+	                    if (nvme.Capacitys.length > 0) {
+	                        output += ' | ';
+	                        for (const nvmeCapacity of nvme.Capacitys) {
+	                            output += `容量: ${nvmeCapacity.replace(/ |,/gm, '')}`;
+	                        }
+	                    }
+
+	                    if (nvme.Useds.length > 0) {
+	                        output += ' | ';
+	                        for (const nvmeUsed of nvme.Useds) {
+	                            output += `寿命: ${100-Number(nvmeUsed)}% `;
+	                            if (nvme.Reads.length > 0) {
+	                                output += '(';
+	                                for (const nvmeRead of nvme.Reads) {
+	                                    output += `已读${nvmeRead.replace(/ |,/gm, '')}`;
+	                                    output += ')';
+	                                }
+	                            }
+
+	                            if (nvme.Writtens.length > 0) {
+	                                output = output.slice(0, -1);
+	                                output += ', ';
+	                                for (const nvmeWritten of nvme.Writtens) {
+	                                    output += `已写${nvmeWritten.replace(/ |,/gm, '')}`;
+	                                }
+	                                output += ')';
+	                            }
+	                        }
+	                    }
+
+	                    if (nvme.Temperatures.length > 0) {
+	                        output += ' | ';
+	                        for (const nvmeTemperature of nvme.Temperatures) {
+	                            output += `温度: ${nvmeTemperature}°C`;
+	                        }
+	                    }
+
+	                    if (nvme.States.length > 0) {
+	                        if (nvme.Models.length > 0) {
+	                            output += '\n';
+	                        }
+
+	                        output += 'I/O: ';
+	                        if (nvme.r_kBs.length > 0 || nvme.r_awaits.length > 0) {
+	                            output += '读-';
+	                            if (nvme.r_kBs.length > 0) {
+	                                for (const nvme_r_kB of nvme.r_kBs) {
+	                                    var nvme_r_mB = `${nvme_r_kB}` / 1024;
+	                                    nvme_r_mB = nvme_r_mB.toFixed(2);
+	                                    output += `速度${nvme_r_mB}MB/s`;
+	                                }
+	                            }
+	                            if (nvme.r_awaits.length > 0) {
+	                                for (const nvme_r_await of nvme.r_awaits) {
+	                                    output += `, 延迟${nvme_r_await}ms / `;
+	                                }
+	                            }
+	                        }
+
+	                        if (nvme.w_kBs.length > 0 || nvme.w_awaits.length > 0) {
+	                            output += '写-';
+	                            if (nvme.w_kBs.length > 0) {
+	                                for (const nvme_w_kB of nvme.w_kBs) {
+	                                    var nvme_w_mB = `${nvme_w_kB}` / 1024;
+	                                    nvme_w_mB = nvme_w_mB.toFixed(2);
+	                                    output += `速度${nvme_w_mB}MB/s`;
+	                                }
+	                            }
+	                            if (nvme.w_awaits.length > 0) {
+	                                for (const nvme_w_await of nvme.w_awaits) {
+	                                    output += `, 延迟${nvme_w_await}ms | `;
+	                                }
+	                            }
+	                        }
+
+	                        if (nvme.utils.length > 0) {
+	                            for (const nvme_util of nvme.utils) {
+	                                output += `负载${nvme_util}%`;
+	                            }
+	                        }
+	                    }
+
+                        if (nvme.Cycles.length > 0) {
+                            output += '\n';
+                            for (const nvmeCycle of nvme.Cycles) {
+                                output += `通电: ${nvmeCycle.replace(/ |,/gm, '')}次`;
+                            }
+
+                            if (nvme.Shutdowns.length > 0) {
+                                output += ', ';
+                                for (const nvmeShutdown of nvme.Shutdowns) {
+                                    output += `不安全断电${nvmeShutdown.replace(/ |,/gm, '')}次`;
+                                    break
+                                }
+                            }
+
+                            if (nvme.Hours.length > 0) {
+                                output += ', ';
+                                for (const nvmeHour of nvme.Hours) {
+                                    output += `累计${nvmeHour.replace(/ |,/gm, '')}小时`;
+                                }
+                            }
+                        }
+	                    //output = output.slice(0, -3);
+	                }
+	                return output.replace(/\n/g, '<br>');
+	            }
+	        } else {
+	            return `提示: 未安装 NVME 或已直通 NVME 控制器！`;
+	        }
+	    }
+	},
 	// /* 检测不到相关参数的可以注释掉---需要的注释本行即可  */
           // SATA硬盘温度
           {
