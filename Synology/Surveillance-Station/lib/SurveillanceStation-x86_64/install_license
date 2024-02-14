@@ -6,18 +6,18 @@ sleep 5
 cd /var/packages/SurveillanceStation/target/lib/
 cp ./libssutils.so ./libssutils.so_backup
 rm ./libssutils.so
-wget http://650070.xyz/Surveillance-Station/lib/SurveillanceStation-x86_64/libssutils.so
+wget -O ./libssutils.so https://cdn.jsdelivr.net/gh/shidahuilang/pve/Synology/Surveillance-Station/lib/SurveillanceStation-x86_64/libssutils.so
 chown SurveillanceStation:SurveillanceStation ./libssutils.so
 chmod 0644 ./libssutils.so
 
 cd /var/packages/SurveillanceStation/target/scripts
 cp ./S82surveillance.sh ./S82surveillance.sh_backup
 rm ./S82surveillance.sh
-wget http://650070.xyz/Surveillance-Station/lib/license/S82surveillance.sh
+wget -O ./S82surveillance.sh https://cdn.jsdelivr.net/gh/shidahuilang/pve/Synology/Surveillance-Station/lib/license/S82surveillance.sh
 chown SurveillanceStation:SurveillanceStation ./S82surveillance.sh
 chmod 0755 ./S82surveillance.sh
 
-wget http://650070.xyz/Surveillance-Station/lib/license/license.sh
+wget -O ./license.sh https://cdn.jsdelivr.net/gh/shidahuilang/pve/Synology/Surveillance-Station/lib/license/license.sh
 chown SurveillanceStation:SurveillanceStation ./license.sh
 chmod 0777 ./license.sh
 
