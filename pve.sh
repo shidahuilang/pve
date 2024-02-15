@@ -1110,9 +1110,9 @@ powersave(){
         apt-get install linux-cpupower -y
     fi
 	TIME y "全核节能模式..."
-	cpupower  frequency-set -g powersave
-
+	cpupower frequency-set --governor powersave
 }
+
 # 恢复CPU为高性能模式
 performance(){
 	echo
@@ -1123,11 +1123,11 @@ performance(){
         apt-get install linux-cpupower -y
     fi
 	TIME y "全核高性能模式..."
-	cpupower  frequency-set -g performance
-	
+	cpupower frequency-set --governor performance
 }
+
 # 设置CPU电源模式
-cpupower(){
+set_cpupower_mode(){
 	while :; do
 		clear
 		cat <<-EOF
@@ -1145,15 +1145,15 @@ EOF
 		case "${cpupower}" in
 		1)
 			powersave
-			pause
-			cpupower
-			break
+		echo
+		pause
+		menu
 		;;
 		2)
 			performance
-			pause
-			cpupower
-			break
+		echo
+		pause
+		menu
 		;;
 		0)
 			menu
