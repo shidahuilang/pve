@@ -50,6 +50,9 @@ TIME() {
 aptsources() {
 	sver=`cat /etc/debian_version |awk -F"." '{print $1}'`
 	case "$sver" in
+ 	12 )
+  		sver="bookworm"
+ 	;;
 	11 )
 		sver="bullseye"
 	;;
