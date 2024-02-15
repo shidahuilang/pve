@@ -1217,7 +1217,7 @@ EOF
 		menu
   	;;
 	6)
-		cpupower
+		set_cpupower_mode
 		echo
 		pause
 		menu
