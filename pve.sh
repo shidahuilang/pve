@@ -1096,6 +1096,76 @@ EOF
 	esac
 }
 #--------------cpu_freq-end----------------
+
+
+
+#--------------设置CPU电源模式----------------
+# 设置CPU节能模式
+powersave(){
+	echo
+	TIME y "设置CPU节能模式..."
+	TIME y "安装软件包..."
+    if ! dpkg -s linux-cpupower &> /dev/null; then
+        echo "linux-cpupower 未安装，开始安装软件包"
+        apt-get install linux-cpupower -y
+    fi
+	TIME y "全核节能模式..."
+	cpupower  frequency-set -g powersave
+
+}
+# 恢复CPU为高性能模式
+performance(){
+	echo
+	TIME y "恢复CPU为高性能模式..."
+	TIME y "安装软件包..."
+    if ! dpkg -s linux-cpupower &> /dev/null; then
+        echo "linux-cpupower 未安装，开始安装软件包"
+        apt-get install linux-cpupower -y
+    fi
+	TIME y "全核高性能模式..."
+	cpupower  frequency-set -g performance
+	
+}
+# 设置CPU电源模式
+cpupower(){
+	while :; do
+		clear
+		cat <<-EOF
+`TIME y "	      设置CPU电源模式"`
+┌──────────────────────────────────────────┐
+    1. 设置CPU节能模式
+    2. 恢复CPU为高性能模式
+├──────────────────────────────────────────┤
+    0. 返回
+└──────────────────────────────────────────┘
+EOF
+		echo -ne " 请选择: [ ]\b\b"
+		read -t 60 cpupower
+		cpupower=${cpupower:-0}
+		case "${cpupower}" in
+		1)
+			powersave
+			pause
+			cpupower
+			break
+		;;
+		2)
+			performance
+			pause
+			cpupower
+			break
+		;;
+		0)
+			menu
+			break
+		;;
+		*)
+		;;
+		esac
+	done
+}
+#--------------设置CPU电源模式----------------
+
 # 主菜单
 menu(){
 	clear
@@ -1142,6 +1212,12 @@ EOF
 	;;
 	5)
 		cpu_freq
+		echo
+		pause
+		menu
+  	;;
+	6)
+		cpupower
 		echo
 		pause
 		menu
