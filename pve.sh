@@ -465,7 +465,7 @@ echo pve版本$pvever
 tmpf=tmpfile.temp
 touch $tmpf
 cat > $tmpf << 'EOF' 
-	$res->{cpusensors} = `lscpu | grep MHz`;
+	$res->{cpusensors} = `cat /proc/cpuinfo | grep MHz && lscpu | grep MHz`;
 	$res->{thermalstate} = `sensors`;
 
 	my $nvme0_info = `smartctl -a /dev/nvme0 | grep -E "Model Number|(?=Total|Namespace)[^:]+Capacity|Temperature:|Available Spare:|Percentage|Data Unit|Power Cycles|Power On Hours|Unsafe Shutdowns|Integrity Errors"`;
@@ -505,11 +505,9 @@ cat > $tmpf << 'EOF'
               const c1 = value.match(/Core 1.*?\+([\d\.]+)?/)[1];  // CPU核心2温度
               const c2 = value.match(/Core 2.*?\+([\d\.]+)?/)[1];  // CPU核心3温度
               const c3 = value.match(/Core 3.*?\+([\d\.]+)?/)[1];  // CPU核心4温度
-	      const c4 = value.match(/Core 4.*?\+([\d\.]+)?/)[1];  // CPU核心5温度
-              const c5 = value.match(/Core 5.*?\+([\d\.]+)?/)[1];  // CPU核心6温度
               // const b0 = value.match(/temp1.*?\+([\d\.]+)?/)[1];  // 主板温度
               // const b1 = value.match(/temp2.*?\+([\d\.]+)?/)[1];  // 主板温度2
-              return ` 核心1: ${c0} ℃ | 核心2: ${c1} ℃ | 核心3: ${c2} ℃ | 核心4: ${c3} ℃ | 核心5: ${c4} ℃| 核心6: ${c5} ℃ `  // 不带主板温度
+              return ` 核心1: ${c0} ℃ | 核心2: ${c1} ℃ | 核心3: ${c2} ℃ | 核心4: ${c3} ℃ `  // 不带主板温度
               // return `Package: ${p0} ℃ || 核心1: ${c0} ℃ | 核心2: ${c1} ℃ | 核心3: ${c2} ℃ | 核心4: ${c3} ℃ || 主板: ${b0} ℃ | ${b1} ℃ `  // 带主板温度
             }
     },
