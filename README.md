@@ -25,15 +25,15 @@ bash -c "$(curl -fsSL https://cdn.jsdelivr.net/gh/shidahuilang/pve@main/pve.sh)"
 ```
 - ### PVE一键升级PVE，lxc换源，去掉无效订阅
 ```sh
-bash -c  "$(curl -fsSL https://cdn.jsdelivr.net/gh/shidahuilang/pve/main/pvehy.sh)"
+bash -c  "$(curl -fsSL https://cdn.jsdelivr.net/gh/shidahuilang/pve@main/pvehy.sh)"
 ```
 - ### 开启ssh+BBR+root登录+密码设置(默认密码：dahuilang)
 ```
-bash -c  "$(curl -fsSL https://cdn.jsdelivr.net/gh/shidahuilang/pve/main/lang.sh)"
+bash -c  "$(curl -fsSL https://cdn.jsdelivr.net/gh/shidahuilang/pve@main/lang.sh)"
 ```
 - ### (centos、ubuntu、debian、alpine)一键开启SSH
 ```sh
-bash -c  "$(curl -fsSL https://cdn.jsdelivr.net/gh/shidahuilang/pve/main/ssh.sh)"
+bash -c  "$(curl -fsSL https://cdn.jsdelivr.net/gh/shidahuilang/pve@main/ssh.sh)"
 ```
 - 黑群晖cpu正确识别
 ```
