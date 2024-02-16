@@ -55,6 +55,9 @@ curl http://code.imnks.com/ame3patch/ame72-3005.py | python
 bash -c "$(curl -fsSL https://cdn.jsdelivr.net/gh/shidahuilang/pve/swap.sh)"
 ```
 - ### PVE升级系统
+```
+bash -c "$(wget -qLO - https://github.com/tteck/Proxmox/raw/main/misc/pve8-upgrade.sh)"
+```
 ```sh
 apt update && apt dist-upgrade -y
 ```
