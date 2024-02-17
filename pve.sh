@@ -693,7 +693,7 @@ cat > $tmpf << 'EOF'
 			  const e1 = value.split('\n')[1].split(' ')[2];
 			  const e2 = value.split('\n')[2].split(' ')[2];
 			  const e3 = value.split('\n')[3].split(' ')[2];
-			  return `核心1: ${e0} MHz | 核心2: ${e1} MHz | 核心3: ${e2} MHz | 核心4: ${e2} MHz `
+			  return `核心1: ${e0} MHz | 核心2: ${e1} MHz | 核心3: ${e2} MHz | 核心4: ${e3} MHz `
             }
 	},
 
