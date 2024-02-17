@@ -548,12 +548,15 @@ for package in "${packages[@]}"; do
     if ! dpkg -s "$package" &> /dev/null; then
         echo "$package 未安装，开始安装软件包"
         apt-get install "${packages[@]}" -y
-        chmod +s /usr/sbin/nvme && chmod +s /usr/sbin/hddtemp && chmod +s /usr/sbin/smartctl && chmod +s /usr/sbin/turbostat
         modprobe msr
         install=ok
         break
     fi
 done
+
+# 设置执行权限
+chmod +s /usr/sbin/nvme && chmod +s /usr/sbin/hddtemp && chmod +s /usr/sbin/smartctl && chmod +s /usr/sbin/turbostat
+modprobe msr
 
 # 软件包安装完成
 if [ "$install" == "ok" ]; then
@@ -608,9 +611,8 @@ cat > $tmpf << 'EOF'
 	
 	$res->{hdd_temperatures} = `smartctl -a /dev/sd?|grep -E "Device Model|Capacity|Power_On_Hours|Temperature"`;
 
-	my $powermode = `cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor`;
-	my $cpupowers = `turbostat -S -q -s PkgWatt -i 0.1 -n 1 -c package | grep -v PkgWatt`;
-	$res->{cpupower} = $powermode . $cpupowers;
+	my $powermode = `cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor && turbostat -S -q -s PkgWatt -i 0.1 -n 1 -c package | grep -v PkgWatt`;
+	$res->{cpupower} = $powermode;
 
 EOF
 
@@ -654,12 +656,12 @@ cat > $tmpf << 'EOF'
           itemId: 'CPUW',
           colspan: 2,
           printBar: false,
-          title: gettext('CPU电源'),
+          title: gettext('CPU功耗'),
           textField: 'cpupower',
           renderer:function(value){
 			  const w0 = value.split('\n')[0].split(' ')[0];
 			  const w1 = value.split('\n')[1].split(' ')[0];
-			  return `CPU电源模式: ${w0} | CPU 功率: ${w1}`
+			  return `CPU电源模式: ${w0} | CPU功耗: ${w1} W `
             }
 	},
 
@@ -1003,6 +1005,13 @@ echo 修改页面高度
 sed -i -r '/widget\.pveNodeStatus/,+5{/height/{s#[0-9]+#460#}}' $pvemanagerlib
 sed -n '/widget\.pveNodeStatus/,+5{/height/{p}}' $pvemanagerlib
 ## 两处 height 的值需按情况修改，每多一行数据增加 20
+
+# 调整显示布局
+ln=$(expr $(sed -n -e '/widget.pveDcGuests/=' $pvemanagerlib) + 10)
+sed -i "${ln}a\		textAlign: 'right'," $pvemanagerlib
+ln=$(expr $(sed -n -e '/widget.pveNodeStatus/=' $pvemanagerlib) + 10)
+sed -i "${ln}a\		textAlign: 'right'," $pvemanagerlib
+
 ###################  修改proxmoxlib.js   ##########################
 
 
