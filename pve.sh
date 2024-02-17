@@ -636,10 +636,8 @@ cat > $tmpf << 'EOF'
               const c1 = value.match(/Core 1.*?\+([\d\.]+)?/)[1];  // CPU核心2温度
               const c2 = value.match(/Core 2.*?\+([\d\.]+)?/)[1];  // CPU核心3温度
               const c3 = value.match(/Core 3.*?\+([\d\.]+)?/)[1];  // CPU核心4温度
-              // const b0 = value.match(/temp1.*?\+([\d\.]+)?/)[1];  // 主板温度
-              // const b1 = value.match(/temp2.*?\+([\d\.]+)?/)[1];  // 主板温度2
-              return ` 核心1: ${c0} ℃ | 核心2: ${c1} ℃ | 核心3: ${c2} ℃ | 核心4: ${c3} ℃ || 主板: ${b0} ℃`  主板温度
-              // return `Package: ${p0} ℃ || 核心1: ${c0} ℃ | 核心2: ${c1} ℃ | 核心3: ${c2} ℃ | 核心4: ${c3} ℃ || 主板: ${b0} ℃ | ${b1} ℃ `  // 带主板温度
+              const b0 = value.match(/temp1.*?\+([\d\.]+)?/)[1];  // 主板温度
+              return ` 核心1: ${c0} ℃ | 核心2: ${c1} ℃ | 核心3: ${c2} ℃ | 核心4: ${c3} ℃ || 主板: ${b0} ℃ `
             }
     },
 	{
@@ -979,7 +977,7 @@ echo 修改页面高度
 # sed -i -r '/\[logView\]/,+5{/heigh/{s#[0-9]+#700#;}}' $pvemanagerlib
 # sed -n '/\[logView\]/,+5{/heigh/{p}}' $pvemanagerlib
 # 修改并显示修改结果,位置36495行,原始值300
-sed -i -r '/widget\.pveNodeStatus/,+5{/height/{s#[0-9]+#430#}}' $pvemanagerlib
+sed -i -r '/widget\.pveNodeStatus/,+5{/height/{s#[0-9]+#440#}}' $pvemanagerlib
 sed -n '/widget\.pveNodeStatus/,+5{/height/{p}}' $pvemanagerlib
 ## 两处 height 的值需按情况修改，每多一行数据增加 20
 ###################  修改proxmoxlib.js   ##########################
