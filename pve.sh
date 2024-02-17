@@ -415,6 +415,122 @@ EOF
 #--------------开启硬件直通----------------
 
 
+#--------------设置CPU电源模式----------------
+
+# 设置CPU电源模式
+cpupower(){
+	governors=`cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors`
+	while :; do
+		clear
+		cat <<-EOF
+`TIME y "	      设置CPU电源模式"`
+┌──────────────────────────────────────────┐
+
+    1. 设置CPU模式 conservative  保守模式
+    2. 设置CPU模式 ondemand       按需模式		[默认]
+    3. 设置CPU模式 powersave      节能模式
+    4. 设置CPU模式 performance   性能模式
+    5. 设置CPU模式 schedutil      负载模式
+
+    6. 恢复系统默认电源设置
+
+├──────────────────────────────────────────┤
+    0. 返回
+└──────────────────────────────────────────┘
+EOF
+		echo
+		echo "部分CPU仅支持 performance 和 powersave 模式，只能选择这两项"
+		echo
+		echo "你的CPU支持 ${governors} 等模式"
+		echo
+		echo
+		echo
+		echo -ne " 请选择: [ ]\b\b"
+		read -t 60 cpupowerid
+		cpupowerid=${cpupowerid:-2}
+		case "${cpupowerid}" in
+		1)
+			GOVERNOR="conservative"
+		;;
+		2)
+			GOVERNOR="ondemand"
+		;;	
+		3)
+			GOVERNOR="powersave"
+		;;
+		4)
+			GOVERNOR="performance"
+		;;
+		5)
+			GOVERNOR="schedutil"
+		;;
+		6)
+			cpupower_del
+			break
+		;;
+		0)
+			menu
+			break
+		;;
+		*)
+			echo "你的输入无效 ,请重新输入 !!!"
+			pause
+			cpupower
+		;;
+		esac
+		if [[ ${GOVERNOR} != "" ]]; then
+			if [[ -n `echo "${governors}" | grep -o "${GOVERNOR}"` ]]; then
+				echo "您选择的CPU模式：${GOVERNOR}"
+				echo
+				cpupower_add
+			else
+				echo "您的CPU不支持该模式！"
+				cpupower
+			fi
+		fi
+	done
+}
+
+# 修改CPU模式
+cpupower_add(){
+	echo "${GOVERNOR}" | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor >/dev/null
+	echo "查看当前CPU模式"
+	cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+
+	echo "添加开机任务"
+	NEW_CRONTAB_COMMAND="sleep 10 && echo "${GOVERNOR}" | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor >/dev/null #CPU Power Mode"
+	EXISTING_CRONTAB=$(crontab -l 2>/dev/null)
+     if [[ -n "$EXISTING_CRONTAB" ]]; then
+       TEMP_CRONTAB_FILE=$(mktemp)
+       echo "$EXISTING_CRONTAB" | grep -v "@reboot sleep 10 && echo*" > "$TEMP_CRONTAB_FILE"
+       crontab "$TEMP_CRONTAB_FILE"
+       rm "$TEMP_CRONTAB_FILE"
+     fi
+	# 修改完成
+    (crontab -l 2>/dev/null; echo "@reboot $NEW_CRONTAB_COMMAND") | crontab -
+    echo -e "\n检查计划任务设置 (使用 'crontab -l' 命令来检查)"
+
+    pause
+}
+
+# 恢复系统默认电源设置
+cpupower_del(){
+	# 恢复性模式
+	echo "performance" | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor >/dev/null
+	# 删除计划任务
+    EXISTING_CRONTAB=$(crontab -l 2>/dev/null)
+    if [[ -n "$EXISTING_CRONTAB" ]]; then
+      TEMP_CRONTAB_FILE=$(mktemp)
+      echo "$EXISTING_CRONTAB" | grep -v "@reboot sleep 10 && echo*" > "$TEMP_CRONTAB_FILE"
+      crontab "$TEMP_CRONTAB_FILE"
+      rm "$TEMP_CRONTAB_FILE"
+    fi
+
+    echo "已恢复系统默认电源设置！"
+}
+#--------------设置CPU电源模式----------------
+
+
 #--------------CPU、主板、硬盘温度显示----------------
 
 # 安装工具
@@ -424,13 +540,22 @@ nodes="/usr/share/perl5/PVE/API2/Nodes.pm"
 pvemanagerlib="/usr/share/pve-manager/js/pvemanagerlib.js"
 proxmoxlib="/usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js"
 
-echo 安装lm-sensors，并检测硬件信息
-if ! command -v sensors &> /dev/null; then
-    echo "sensors未安装，开始安装软件包，并检测硬件信息"
-    apt update -y && apt-get install lm-sensors -y && apt-get install nvme-cli -y && apt install sysstat && chmod +s /usr/sbin/nvme && chmod +s /usr/sbin/smartctl
-    
-    # 配置驱动信息完成
-    echo 检测硬件信息
+# 输入需要安装的软件包
+packages=(lm-sensors nvme-cli sysstat)
+
+# 查询软件包，判断是否安装
+for package in "${packages[@]}"; do
+    if ! dpkg -s "$package" &> /dev/null; then
+        echo "$package 未安装，开始安装软件包"
+        apt-get install "${packages[@]}" -y && chmod +s /usr/sbin/nvme && chmod +s /usr/sbin/smartctl
+        install=ok
+        break
+    fi
+done
+
+# 软件包安装完成
+if [ "$install" == "ok" ]; then
+    echo 软件包安装完成，检测硬件信息
 sensors-detect --auto > /tmp/sensors
 drivers=`sed -n '/Chip drivers/,/\#----cut here/p' /tmp/sensors|sed '/Chip /d'|sed '/cut/d'`
 if [ `echo $drivers|wc -w` = 0 ];then
@@ -454,9 +579,16 @@ rm /tmp/sensors
 # 驱动信息配置完成
 fi
 
-echo 备份源文件
+
 pvever=$(pveversion | awk -F"/" '{print $2}')
 echo pve版本$pvever
+
+echo 备份源文件
+# 删除旧版本备份文件
+rm -f  $nodes.*.bak
+rm -f  $pvemanagerlib.*.bak
+rm -f  $proxmoxlib.*.bak
+# 备份当前版本文件
 [ ! -e $nodes.$pvever.bak ] && cp $nodes $nodes.$pvever.bak || { echo 已经执行过修改，请勿重复执行; exit 1;}
 [ ! -e $pvemanagerlib.$pvever.bak ] && cp $pvemanagerlib $pvemanagerlib.$pvever.bak
 [ ! -e $proxmoxlib.$pvever.bak ] && cp $proxmoxlib $proxmoxlib.$pvever.bak
@@ -465,13 +597,11 @@ echo pve版本$pvever
 tmpf=tmpfile.temp
 touch $tmpf
 cat > $tmpf << 'EOF' 
-	$res->{cpusensors} = `cat /proc/cpuinfo | grep MHz && lscpu | grep MHz`;
 	$res->{thermalstate} = `sensors`;
-
-	my $nvme0_info = `smartctl -a /dev/nvme0 | grep -E "Model Number|(?=Total|Namespace)[^:]+Capacity|Temperature:|Available Spare:|Percentage|Data Unit|Power Cycles|Power On Hours|Unsafe Shutdowns|Integrity Errors"`;
+	$res->{cpusensors} = `cat /proc/cpuinfo | grep MHz && lscpu | grep MHz`;
+	my $nvme0_temperatures = `smartctl -a /dev/nvme0|grep -E "Model Number|(?=Total|Namespace)[^:]+Capacity|Temperature:|Available Spare:|Percentage|Data Unit|Power Cycles|Power On Hours|Unsafe Shutdowns|Integrity Errors"`;
 	my $nvme0_io = `iostat -d -x -k 1 1 | grep -E "^nvme0"`;
-	$res->{nvme0_status} = $nvme0_info . $nvme0_io;
-
+	$res->{nvme0_status} = $nvme0_temperatures . $nvme0_io;
 	$res->{hdd_temperatures} = `smartctl -a /dev/sd?|grep -E "Device Model|Capacity|Power_On_Hours|Temperature"`;
 EOF
 
@@ -485,8 +615,9 @@ echo "匹配的行号：" $ln
 echo 修改结果：
 sed -i "${ln}r $tmpf" $nodes
 # 显示修改结果
-sed -n '/PVE::pvecfg::version_text/,+6p' $nodes
+sed -n '/PVE::pvecfg::version_text/,+18p' $nodes
 rm $tmpf
+
 
 
 ###################  修改pvemanagerlib.js   ##########################
@@ -525,8 +656,8 @@ cat > $tmpf << 'EOF'
             }
 	},
 
-	// /* 检测不到相关参数的可以注释掉---需要的注释本行即可
-	/* 风扇转速
+	/* 检测不到相关参数的可以注释掉---需要的注释本行即可
+	// 风扇转速
 	{
           itemId: 'RPM',
           colspan: 2,
@@ -549,7 +680,7 @@ cat > $tmpf << 'EOF'
 			  return `CPU风扇: ${fan11} | 系统风扇: ${fan22}`
             }
 	},
-	// 检测不到相关参数的可以注释掉---需要的注释本行即可  */
+	检测不到相关参数的可以注释掉---需要的注释本行即可  */
 
 	// /* 检测不到相关参数的可以注释掉---需要的注释本行即可
 	// NVME硬盘温度
@@ -790,7 +921,8 @@ cat > $tmpf << 'EOF'
 	        }
 	    }
 	},
-	// /* 检测不到相关参数的可以注释掉---需要的注释本行即可  */
+	// 检测不到相关参数的可以注释掉---需要的注释本行即可  */
+
           // SATA硬盘温度
           {
           itemId: 'hdd-temperatures',
@@ -847,7 +979,7 @@ echo 修改页面高度
 # sed -i -r '/\[logView\]/,+5{/heigh/{s#[0-9]+#700#;}}' $pvemanagerlib
 # sed -n '/\[logView\]/,+5{/heigh/{p}}' $pvemanagerlib
 # 修改并显示修改结果,位置36495行,原始值300
-sed -i -r '/widget\.pveNodeStatus/,+5{/height/{s#[0-9]+#430#}}' $pvemanagerlib
+sed -i -r '/widget\.pveNodeStatus/,+5{/height/{s#[0-9]+#415#}}' $pvemanagerlib
 sed -n '/widget\.pveNodeStatus/,+5{/height/{p}}' $pvemanagerlib
 ## 两处 height 的值需按情况修改，每多一行数据增加 20
 ###################  修改proxmoxlib.js   ##########################
@@ -1166,19 +1298,19 @@ EOF
 
 # 主菜单
 menu(){
-	clear
 	cat <<-EOF
-`TIME y "	      PVE优化脚本"`
+
+`TIME y "	      PVE优化脚本     "`
 ┌──────────────────────────────────────────┐
     1. 一键优化PVE(换源、去订阅等)
     2. 配置PCI硬件直通
-    3. 添加CPU、主板、硬盘温度显示
-    4. 删除CPU、主板、硬盘温度显示
-    5. CPU睿频模式
-    6. CPU电源模式
+    3. 设置CPU电源模式
+    4. 添加CPU、主板、硬盘温度显示
+    5. 删除CPU、主板、硬盘温度显示
 ├──────────────────────────────────────────┤
     0. 退出
 └──────────────────────────────────────────┘
+
 EOF
 	echo -ne " 请选择: [ ]\b\b"
 	read -t 60 menuid
@@ -1197,25 +1329,19 @@ EOF
 		menu
 	;;
 	3)
-		cpu_add
+		cpupower
 		echo
 		pause
 		menu
 	;;
 	4)
-		cpu_del
+		cpu_add
 		echo
 		pause
 		menu
 	;;
 	5)
-		cpu_freq
-		echo
-		pause
-		menu
-  	;;
-	6)
-		set_cpupower_mode
+		cpu_del
 		echo
 		pause
 		menu
@@ -1226,6 +1352,7 @@ EOF
 	;;
 	*)
 		echo "你的输入无效 ,请重新输入 !!!"
+		pause
 		menu
 	;;
 	esac
