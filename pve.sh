@@ -540,6 +540,9 @@ nodes="/usr/share/perl5/PVE/API2/Nodes.pm"
 pvemanagerlib="/usr/share/pve-manager/js/pvemanagerlib.js"
 proxmoxlib="/usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js"
 
+# 判断是否已经执行过修改
+[ ! -e $nodes.$pvever.bak ] || { echo 已经执行过修改，请勿重复执行; exit 1;}
+
 # 输入需要安装的软件包
 packages=(lm-sensors nvme-cli sysstat linux-cpupower)
 
@@ -594,7 +597,7 @@ rm -f  $nodes.*.bak
 rm -f  $pvemanagerlib.*.bak
 rm -f  $proxmoxlib.*.bak
 # 备份当前版本文件
-[ ! -e $nodes.$pvever.bak ] && cp $nodes $nodes.$pvever.bak || { echo 已经执行过修改，请勿重复执行; exit 1;}
+[ ! -e $nodes.$pvever.bak ] && cp $nodes $nodes.$pvever.bak
 [ ! -e $pvemanagerlib.$pvever.bak ] && cp $pvemanagerlib $pvemanagerlib.$pvever.bak
 [ ! -e $proxmoxlib.$pvever.bak ] && cp $proxmoxlib $proxmoxlib.$pvever.bak
 
