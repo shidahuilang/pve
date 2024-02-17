@@ -541,13 +541,15 @@ pvemanagerlib="/usr/share/pve-manager/js/pvemanagerlib.js"
 proxmoxlib="/usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js"
 
 # 输入需要安装的软件包
-packages=(lm-sensors nvme-cli sysstat)
+packages=(lm-sensors nvme-cli sysstat linux-cpupower)
 
 # 查询软件包，判断是否安装
 for package in "${packages[@]}"; do
     if ! dpkg -s "$package" &> /dev/null; then
         echo "$package 未安装，开始安装软件包"
-        apt-get install "${packages[@]}" -y && chmod +s /usr/sbin/nvme && chmod +s /usr/sbin/smartctl
+        apt-get install "${packages[@]}" -y
+        chmod +s /usr/sbin/nvme && chmod +s /usr/sbin/hddtemp && chmod +s /usr/sbin/smartctl && chmod +s /usr/sbin/turbostat
+        modprobe msr
         install=ok
         break
     fi
@@ -599,10 +601,17 @@ touch $tmpf
 cat > $tmpf << 'EOF' 
 	$res->{thermalstate} = `sensors`;
 	$res->{cpusensors} = `cat /proc/cpuinfo | grep MHz && lscpu | grep MHz`;
+	
 	my $nvme0_temperatures = `smartctl -a /dev/nvme0|grep -E "Model Number|(?=Total|Namespace)[^:]+Capacity|Temperature:|Available Spare:|Percentage|Data Unit|Power Cycles|Power On Hours|Unsafe Shutdowns|Integrity Errors"`;
 	my $nvme0_io = `iostat -d -x -k 1 1 | grep -E "^nvme0"`;
 	$res->{nvme0_status} = $nvme0_temperatures . $nvme0_io;
+	
 	$res->{hdd_temperatures} = `smartctl -a /dev/sd?|grep -E "Device Model|Capacity|Power_On_Hours|Temperature"`;
+
+	my $powermode = `cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor`;
+	my $cpupowers = `turbostat -S -q -s PkgWatt -i 0.1 -n 1 -c package | grep -v PkgWatt`;
+	$res->{cpupower} = $powermode . $cpupowers;
+
 EOF
 
 ###################  修改node.pm   ##########################
@@ -640,6 +649,20 @@ cat > $tmpf << 'EOF'
               return ` 核心1: ${c0} ℃ | 核心2: ${c1} ℃ | 核心3: ${c2} ℃ | 核心4: ${c3} ℃ || 主板: ${b0} ℃ `
             }
     },
+
+	{
+          itemId: 'CPUW',
+          colspan: 2,
+          printBar: false,
+          title: gettext('CPU电源'),
+          textField: 'cpupower',
+          renderer:function(value){
+			  const w0 = value.split('\n')[0].split(' ')[0];
+			  const w1 = value.split('\n')[1].split(' ')[0];
+			  return `CPU电源模式: ${w0} | CPU 功率: ${w1}`
+            }
+	},
+
 	{
           itemId: 'MHz',
           colspan: 2,
@@ -1020,279 +1043,7 @@ fi
 
 #--------------CPU、主板、硬盘温度显示----------------
 
-#--------------hw_passth-end----------------
 
-
-#--------------cpu_freq-start----------------
-# CPU模式
-cpu_governor(){
-	governors=`cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors`
-	while :; do
-		clear
-		cat <<EOF
-`TIME y "	      设置CPU模式"`
-┌──────────────────────────────────────────┐
-    1. ondemand		[默认]
-    2. conservative
-    3. userspace
-    4. powersave
-    5. performance
-    6. schedutil
-└──────────────────────────────────────────┘
-EOF
-		echo -ne " 请选择: [ ]\b\b"
-		read -t 10 governorid
-		governorid=${governorid:-1}
-		case "${governorid}" in
-		1)
-			governor="ondemand"
-		;;
-		2)
-			governor="conservative"
-		;;
-		3)
-			governor="userspace"
-		;;	
-		4)
-			governor="powersave"
-		;;
-		5)
-			governor="performance"
-		;;
-		6)
-			governor="schedutil"
-		;;
-		*)
-			governor=""
-		;;
-		esac
-		if [[ ${governor} != "" ]]; then
-			if [[ -n `echo "${governors}" | grep -o "${governor}"` ]]; then
-				TIME g "您选择的CPU模式：${governor}"
-				break
-			else
-				echo "您的CPU不支持该模式！"
-				sleep 2
-			fi
-		fi
-	done
-}
-# CPU最大频率
-cpu_maxfreq(){
-	echo
-	info=`cpufreq-info | grep "hardware limits" | uniq | awk -F: '{print $2}' | sed 's/ //g'`
-	echo " 当前CPU默认频率范围：${info}"
-	echo " 示例：以J4125为例，最大频率2.7GHz，输入2700000"
-	while :; do
-		read -t 30 -p " 请输入CPU最大频率[HZ]：" maxfreq || echo
-		maxfreq=${maxfreq:-2700000}
-		nmax=`echo ${maxfreq} | sed 's/[0-9]//g'`
-		if [[ ! -z $nmax ]]; then
-			TIME r "输入错误，请重新输入！"
-		elif [[ ${maxfreq} -lt 100000 ]] || [[ ${maxfreq} -gt 9000000 ]] || [[ ${maxfreq} == "" ]]; then
-			TIME r "貌似输入值的范围不正确，请重新输入！"
-		else
-			TIME g "CPU最大频率设置为：${maxfreq}"
-			break
-		fi
-	done
-}
-# CPU最小频率
-cpu_minfreq(){
-	echo
-	info=`cpufreq-info | grep "hardware limits" | uniq | awk -F: '{print $2}' | sed 's/ //g'`
-	echo " 当前CPU默认频率范围：${info}"
-	echo " 示例：以J4125为例，最小频率800MHz，输入800000"
-	while :; do
-		read -t 30 -p " 请输入CPU最小频率[HZ]：" minfreq || echo
-		minfreq=${minfreq:-800000}
-		nmin=`echo ${minfreq} | sed 's/[0-9]//g'`
-		if [[ ! -z $nmin ]]; then
-			TIME r "输入错误，请重新输入！"
-		elif [[ ${minfreq} -lt 100000 ]] || [[ ${minfreq} -gt ${maxfreq} ]] || [[ ${minfreq} == "" ]]; then
-			TIME r "貌似输入值的范围不正确，请重新输入！"
-		else
-			TIME g "CPU最小频率设置为：${minfreq}"
-			break
-		fi
-	done
-}
-# 设置CPU频率
-do_cpufreq(){
-	echo
-	TIME y "配置CPU模式"
-	sleep 1
-	install_tools
-	if [ `grep "intel_pstate=disable" /etc/default/grub|wc -l` = 0 ];then
-		sed -i 's|quiet|quiet intel_pstate=disable|' /etc/default/grub
-		update-grub
-	fi
-	cpu_governor
-	cpu_maxfreq
-	cpu_minfreq
-	cat <<-EOF > /etc/default/cpufrequtils
-ENABLE="true"
-GOVERNOR="${governor}"
-MAX_SPEED="${maxfreq}"
-MIN_SPEED="${minfreq}"
-EOF
-	echo
-	TIME g "已安装好，请稍后重启。"
-}
-# 还原CPU模式
-undo_cpufreq(){
-	clear
-	TIME y "还原CPU模式"
-	cat <<-EOF > /etc/default/cpufrequtils
-ENABLE="true"
-GOVERNOR="ondemand"
-EOF
-	systemctl restart cpufrequtils
-	while :; do
-		read -t 30 -p " 是否继续？[y/Y或n/N，默认y]：" rmgoon || echo
-		rmgoon=${rmgoon:-y}
-		case ${rmgoon} in
-		y|Y)
-			apt -y remove cpufrequtils && \
-			sed -i 's/ intel_pstate=disable//g' /etc/default/grub && \
-			rm -rf /etc/default/cpufrequtils && TIME g "配置完成!"
-			break
-		;;
-		n|N)
-			menu
-			break
-		;;
-		*)
-		;;
-		esac
-	done
-}
-
-# CPU模式菜单
-cpu_freq(){
-	clear
-	cat <<-EOF
-`TIME y "	      cpufrequtils工具"`
-┌──────────────────────────────────────────┐
-    1. 安装配置
-    2. 还原配置
-├──────────────────────────────────────────┤
-    0. 返回
-└──────────────────────────────────────────┘
-EOF
-	echo -ne " 请选择: [ ]\b\b"
-	read -t 60 cpumenuid
-	cpumenuid=${cpumenuid:-0}
-	case "${cpumenuid}" in
-	1)
-		if [ `grep "intel_pstate=disable" /etc/default/grub|wc -l` = 0 ];then
-			do_cpufreq
-		else
-			TIME y "查询到/etc/default/grub存在intel_pstate=disable配置，似乎已经配置过。"
-			while :; do
-				read -t 10 -p " 是否继续？[y/Y或n/N，默认y]：" chgoon || echo
-				chgoon=${chgoon:-y}
-				case ${chgoon} in
-				y|Y)
-					do_cpufreq
-					break
-				;;
-				n|N)
-					menu
-					break
-				;;
-				*)
-				;;
-				esac
-			done
-		fi
-		echo
-		pause
-		menu
-	;;
-	5)
-		undo_cpufreq
-		echo
-		pause
-		menu
-	;;
-	0)
-		menu
-	;;
-	*)
-		cpu_freq		
-	esac
-}
-#--------------cpu_freq-end----------------
-
-
-
-#--------------设置CPU电源模式----------------
-# 设置CPU节能模式
-powersave(){
-	echo
-	TIME y "设置CPU节能模式..."
-	TIME y "安装软件包..."
-    if ! dpkg -s linux-cpupower &> /dev/null; then
-        echo "linux-cpupower 未安装，开始安装软件包"
-        apt-get install linux-cpupower -y
-    fi
-	TIME y "全核节能模式..."
-	cpupower frequency-set --governor powersave
-}
-
-# 恢复CPU为高性能模式
-performance(){
-	echo
-	TIME y "恢复CPU为高性能模式..."
-	TIME y "安装软件包..."
-    if ! dpkg -s linux-cpupower &> /dev/null; then
-        echo "linux-cpupower 未安装，开始安装软件包"
-        apt-get install linux-cpupower -y
-    fi
-	TIME y "全核高性能模式..."
-	cpupower frequency-set --governor performance
-}
-
-# 设置CPU电源模式
-set_cpupower_mode(){
-	while :; do
-		clear
-		cat <<-EOF
-`TIME y "	      设置CPU电源模式"`
-┌──────────────────────────────────────────┐
-    1. 设置CPU节能模式
-    2. 恢复CPU为高性能模式
-├──────────────────────────────────────────┤
-    0. 返回
-└──────────────────────────────────────────┘
-EOF
-		echo -ne " 请选择: [ ]\b\b"
-		read -t 60 cpupower
-		cpupower=${cpupower:-0}
-		case "${cpupower}" in
-		1)
-			powersave
-		echo
-		pause
-		menu
-		;;
-		2)
-			performance
-		echo
-		pause
-		menu
-		;;
-		0)
-			menu
-			break
-		;;
-		*)
-		;;
-		esac
-	done
-}
-#--------------设置CPU电源模式----------------
 
 # 主菜单
 menu(){
