@@ -635,22 +635,6 @@ rm $tmpf
 tmpf=tmpfile.temp
 touch $tmpf
 cat > $tmpf << 'EOF'
-	{
-          itemId: 'thermal',
-          colspan: 2,
-          printBar: false,
-          title: gettext('CPU温度'),
-          textField: 'thermalstate',
-          renderer:function(value){
-              // const p0 = value.match(/Package id 0.*?\+([\d\.]+)Â/)[1];  // CPU包温度
-              const c0 = value.match(/Core 0.*?\+([\d\.]+)?/)[1];  // CPU核心1温度
-              const c1 = value.match(/Core 1.*?\+([\d\.]+)?/)[1];  // CPU核心2温度
-              const c2 = value.match(/Core 2.*?\+([\d\.]+)?/)[1];  // CPU核心3温度
-              const c3 = value.match(/Core 3.*?\+([\d\.]+)?/)[1];  // CPU核心4温度
-              const b0 = value.match(/temp1.*?\+([\d\.]+)?/)[1];  // 主板温度
-              return ` 核心1: ${c0} ℃ | 核心2: ${c1} ℃ | 核心3: ${c2} ℃ | 核心4: ${c3} ℃ || 主板: ${b0} ℃ `
-            }
-    },
 
 	{
           itemId: 'CPUW',
@@ -678,7 +662,43 @@ cat > $tmpf << 'EOF'
 			  return `CPU实时: ${f0} MHz | 最小: ${f1} MHz | 最大: ${f2} MHz `
             }
 	},
+	
+	{
+          itemId: 'thermal',
+          colspan: 2,
+          printBar: false,
+          title: gettext('CPU温度'),
+          textField: 'thermalstate',
+          renderer:function(value){
+              // const p0 = value.match(/Package id 0.*?\+([\d\.]+)Â/)[1];  // CPU包温度
+              const c0 = value.match(/Core 0.*?\+([\d\.]+)?/)[1];  // CPU核心1温度
+              const c1 = value.match(/Core 1.*?\+([\d\.]+)?/)[1];  // CPU核心2温度
+              const c2 = value.match(/Core 2.*?\+([\d\.]+)?/)[1];  // CPU核心3温度
+              const c3 = value.match(/Core 3.*?\+([\d\.]+)?/)[1];  // CPU核心4温度
+              const b0 = value.match(/temp1.*?\+([\d\.]+)?/)[1];  // 主板温度
+              return ` 核心1: ${c0} ℃ | 核心2: ${c1} ℃ | 核心3: ${c2} ℃ | 核心4: ${c3} ℃ || 主板: ${b0} ℃ `
+            }
+    },
 
+
+
+	{
+          itemId: 'HEXIN',
+          colspan: 2,
+          printBar: false,
+          title: gettext('核心频率'),
+          textField: 'cpusensors',
+          renderer:function(value){
+			  const e0 = value.split('\n')[0].split(' ')[2];
+			  const e1 = value.split('\n')[1].split(' ')[2];
+			  const e2 = value.split('\n')[2].split(' ')[2];
+			  const e3 = value.split('\n')[3].split(' ')[2];
+			  return `核心1: ${e0} MHz | 核心2: ${e1} MHz | 核心3: ${e2} MHz | 核心4: ${e2} MHz `
+            }
+	},
+
+
+	
 	/* 检测不到相关参数的可以注释掉---需要的注释本行即可
 	// 风扇转速
 	{
@@ -1002,7 +1022,7 @@ echo 修改页面高度
 # sed -i -r '/\[logView\]/,+5{/heigh/{s#[0-9]+#700#;}}' $pvemanagerlib
 # sed -n '/\[logView\]/,+5{/heigh/{p}}' $pvemanagerlib
 # 修改并显示修改结果,位置36495行,原始值300
-sed -i -r '/widget\.pveNodeStatus/,+5{/height/{s#[0-9]+#460#}}' $pvemanagerlib
+sed -i -r '/widget\.pveNodeStatus/,+5{/height/{s#[0-9]+#480#}}' $pvemanagerlib
 sed -n '/widget\.pveNodeStatus/,+5{/height/{p}}' $pvemanagerlib
 ## 两处 height 的值需按情况修改，每多一行数据增加 20
 
