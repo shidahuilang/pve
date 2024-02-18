@@ -561,17 +561,8 @@ for package in "${packages[@]}"; do
 done
 
 # 设置执行权限
-if dpkg -s "linux-cpupower" &> /dev/null; then
-    chmod +s /usr/sbin/linux-cpupower || echo "Failed to set permissions for /usr/sbin/linux-cpupower"
-fi
-
-chmod +s /usr/sbin/nvme
-chmod +s /usr/sbin/hddtemp
-chmod +s /usr/sbin/smartctl
-chmod +s /usr/sbin/turbostat || echo "Failed to set permissions for /usr/sbin/turbostat"
-
+chmod +s /usr/sbin/nvme && chmod +s /usr/sbin/hddtemp && chmod +s /usr/sbin/smartctl && chmod +s /usr/sbin/turbostat
 modprobe msr
-
 
 # 软件包安装完成
 if [ "$install" == "ok" ]; then
