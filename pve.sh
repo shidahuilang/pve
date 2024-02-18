@@ -540,6 +540,9 @@ nodes="/usr/share/perl5/PVE/API2/Nodes.pm"
 pvemanagerlib="/usr/share/pve-manager/js/pvemanagerlib.js"
 proxmoxlib="/usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js"
 
+pvever=$(pveversion | awk -F"/" '{print $2}')
+echo pve版本$pvever
+
 # 判断是否已经执行过修改
 [ ! -e $nodes.$pvever.bak ] || { echo 已经执行过修改，请勿重复执行; exit 1;}
 
@@ -586,10 +589,6 @@ fi
 rm /tmp/sensors
 # 驱动信息配置完成
 fi
-
-
-pvever=$(pveversion | awk -F"/" '{print $2}')
-echo pve版本$pvever
 
 echo 备份源文件
 # 删除旧版本备份文件
