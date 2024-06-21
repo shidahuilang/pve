@@ -15,7 +15,7 @@ apk add curl bash
 ```sh
 bash -c "$(curl -fsSL https://cdn.jsdelivr.net/gh/shidahuilang/pve/set.sh)"
 ```
-- ### clsh订阅转换docker版
+- ### clash订阅转换docker版
 ```sh
 bash -c  "$(curl -fsSL https://raw.githubusercontent.com/shidahuilang/pve/main/docker-clash.sh)"
 ```
