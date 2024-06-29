@@ -569,8 +569,7 @@ chmod +s /usr/sbin/nvme
 chmod +s /usr/sbin/hddtemp
 chmod +s /usr/sbin/smartctl
 chmod +s /usr/sbin/turbostat || echo "Failed to set permissions for /usr/sbin/turbostat"
-
-modprobe msr
+modprobe msr && echo msr > /etc/modules-load.d/turbostat-msr.conf
 
 
 # 软件包安装完成
