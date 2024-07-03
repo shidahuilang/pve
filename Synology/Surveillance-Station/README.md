@@ -26,7 +26,8 @@ bash <(curl -L https://cdn.jsdelivr.net/gh/shidahuilang/pve/Synology/Surveillanc
 ```
 bash <(curl -L https://cdn.jsdelivr.net/gh/shidahuilang/pve/Synology/Surveillance-Station/Surveillance-Station/lib/license/remove_license)
 ```
-####屏蔽套件更新
+#### 屏蔽套件更新
+
 如果只是更新通知惹恼了您，您可以像我所做的那样欺骗系统，您拥有最新版本，并且它不会显示更新。
 使用 vi 打开 ```/var/packages/SurveillanceStation/INFO```
 将 ```version=“9.1.2-10854```” 更改为最新可用版本或更高版本。
