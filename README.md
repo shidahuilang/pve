@@ -3,7 +3,7 @@
 
 - 为防止系统没安装curl，使用不了一键命令，使用下面的一键命令之前先执行一次安装curl命令
 ```sh
-apt -y update && apt -y install curl wget sudo || yum install -y curl wget || apk add curl bash
+apt -y update && apt -y install curl wget sudo || yum install -y curl wget sudo || apk add curl bash
 ```
 
 - 使用root用户登录alpine系统，后执行以下命令安装curl
