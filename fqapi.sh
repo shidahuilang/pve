@@ -386,9 +386,9 @@ check_redis_status() {
 # 显示菜单并执行相应操作
 show_menu() {
     clear
-    echo -e "${CYAN}#########################################"
-    echo -e "${CYAN}#           项目管理脚本             #"
-    echo -e "${CYAN}#########################################"
+    echo -e "${CYAN}##################################################"
+    echo -e "${CYAN}#           晴天书源项目脚本    by:大灰狼        #"
+    echo -e "${CYAN}##################################################"
     echo -e "${BLUE}当前项目状态: $(check_redis_status) $(check_gunicorn_status)${NC}"
     echo -e "${BLUE}1) ${GREEN}安装项目"
     echo -e "${BLUE}2) ${GREEN}启动项目"
@@ -398,7 +398,7 @@ show_menu() {
     echo -e "${BLUE}6) ${CYAN}整理数据"
     echo -e "${BLUE}7) ${CYAN}导入数据"
     echo -e "${BLUE}8) ${RED}退出脚本"
-    echo -e "${CYAN}#########################################"
+    echo -e "${CYAN}##################################################"
     read -p "请输入操作: " choice
     case "$choice" in
         1)
