@@ -103,6 +103,7 @@ install_dependencies() {
     esac
 }
 
+
 # 安装 Python 3.11 和虚拟环境
 install_python() {
     # 检查是否已安装 Python 3.11
@@ -139,9 +140,6 @@ install_python() {
         python3.11 -m pip install --upgrade pip setuptools
     fi
 }
-
-
-
 
 # 设置虚拟环境并安装依赖
 setup_virtualenv() {
@@ -191,14 +189,74 @@ setup_redis() {
     case "$OS" in
         debian | centos)
             sudo systemctl start redis-server
-            sudo systemctl enable redis-server
             ;;
         darwin)
             redis-server --daemonize yes
             ;;
     esac
-    print_message "success" "Redis 服务已启动"
+
+    # 检查 Redis 是否成功启动
+    if [[ "$OS" == "darwin" ]]; then
+        # macOS 通过检查进程是否存在来确认 Redis 是否启动
+        if ! pgrep -x "redis-server" > /dev/null; then
+            print_message "error" "Redis 启动失败，正在替换配置文件..."
+            configure_redis
+        else
+            print_message "success" "Redis 服务已启动"
+        fi
+    else
+        if ! systemctl is-active --quiet redis; then
+            print_message "error" "Redis 启动失败，正在替换配置文件..."
+            configure_redis
+        else
+            print_message "success" "Redis 服务已启动"
+        fi
+    fi
 }
+
+# 替换 Redis 配置文件
+configure_redis() {
+    # 获取 Redis 配置文件路径
+    local redis_conf_path
+    if [[ "$OS" == "debian" || "$OS" == "centos" ]]; then
+        redis_conf_path="/etc/redis/redis.conf"
+    elif [[ "$OS" == "darwin" ]]; then
+        redis_conf_path="/usr/local/etc/redis.conf"
+    else
+        print_message "error" "无法找到 Redis 配置文件路径"
+        exit 1
+    fi
+
+    # 替换配置文件内容
+    echo -e "bind 127.0.0.1\nport 6379\nprotected-mode no" | sudo tee "$redis_conf_path" > /dev/null
+
+    # 尝试重新启动 Redis 服务
+    print_message "success" "配置文件已替换，尝试重新启动 Redis 服务..."
+    case "$OS" in
+        debian | centos)
+            sudo systemctl start redis-server
+            ;;
+        darwin)
+            redis-server --daemonize yes
+            ;;
+    esac
+
+    if [[ "$OS" == "darwin" ]]; then
+        if pgrep -x "redis-server" > /dev/null; then
+            print_message "success" "Redis 服务已成功启动"
+        else
+            print_message "error" "Redis 启动仍然失败，请检查配置文件和日志"
+        fi
+    else
+        if systemctl is-active --quiet redis; then
+            print_message "success" "Redis 服务已成功启动"
+        else
+            print_message "error" "Redis 启动仍然失败，请检查配置文件和日志"
+        fi
+    fi
+}
+
+
 
 # 检查端口是否被占用并释放
 check_and_release_port() {
@@ -445,10 +503,6 @@ show_menu() {
             ;;
     esac
 }
-
-
-
-
 
 # 调用菜单
 show_menu
