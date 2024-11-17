@@ -175,7 +175,7 @@ setup_redis() {
                 sudo yum install -y redis
                 ;;
             darwin)
-                brew install redis-server --daemonize yes
+                brew install redis
                 ;;
             *)
                 print_message "error" "不支持的操作系统"
