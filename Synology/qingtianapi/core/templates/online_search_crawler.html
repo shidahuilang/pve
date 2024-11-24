@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>大灰狼搜索</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            padding: 20px 0;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0 auto;
+            max-width: 1200px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        li {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            margin: 10px;
+            width: 300px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+            text-align: center;
+        }
+        li:hover {
+            transform: translateY(-5px);
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+        h1.book_name {
+            font-size: 18px;
+            color: #333;
+        }
+        p {
+            margin: 5px 0;
+        }
+        .media, .author, .category, .score, .status, .word_number, .abstract {
+            font-size: 14px;
+            color: #888;
+            text-align: left;
+        }
+
+        /* 搜索容器整体样式 */
+        .search-container {
+            display: flex;
+            justify-content: center; /* 水平居中 */
+            align-items: center; /* 垂直居中 */
+            margin-top: 50px; /* 距离页面顶部的间距 */
+            flex-wrap: wrap; /* 允许换行 */
+            padding: 0 20px; /* 添加一些内边距以防止内容贴边 */
+        }
+
+        /* 搜索框样式 */
+        .search-box {
+            flex: 1; /* 允许搜索框扩展以占据可用空间 */
+            min-width: 250px; /* 设置最小宽度以确保在小屏幕上的可用性 */
+            padding: 10px; /* 内边距 */
+            border: 2px solid #ccc; /* 边框颜色和宽度 */
+            border-radius: 25px 0 0 25px; /* 圆角边框，左边圆角 */
+            font-size: 16px; /* 字体大小 */
+            outline: none; /* 去除输入框的默认边框 */
+            transition: border-color 0.3s ease-in-out; /* 鼠标悬停边框变化效果 */
+        }
+
+        /* 当搜索框获取焦点时的样式 */
+        .search-box:focus {
+            border-color: #007bff; /* 改变为亮蓝色边框 */
+        }
+
+        /* 搜索按钮样式 */
+        .search-button {
+            padding: 10px 20px; /* 内边距 */
+            border: 2px solid #007bff; /* 按钮边框颜色 */
+            border-left: none; /* 去除左边框 */
+            background-color: #007bff; /* 按钮背景颜色 */
+            color: white; /* 按钮文字颜色 */
+            border-radius: 0 25px 25px 0; /* 圆角边框，右边圆角 */
+            cursor: pointer; /* 鼠标悬停时显示手形光标 */
+            font-size: 16px; /* 字体大小 */
+            transition: background-color 0.3s ease-in-out; /* 背景颜色变化效果 */
+            min-width: 80px; /* 按钮的最小宽度 */
+        }
+
+        /* 鼠标悬停时按钮颜色变化 */
+        .search-button:hover {
+            background-color: #0056b3; /* 按钮变暗的蓝色 */
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 600px) {
+            .search-container {
+                flex-direction: column; /* 小屏幕上垂直布局 */
+                align-items: stretch; /* 让元素充满父容器 */
+            }
+
+            .search-box {
+                margin-bottom: 10px; /* 搜索框与按钮间的间距 */
+                border-radius: 25px;
+            }
+
+            .search-button {
+                width: 100%; /* 按钮宽度占满 */
+                border-radius: 25px; /* 小屏幕时按钮有圆角 */
+            }
+        }
+
+
+    </style>
+    <!--    <script>-->
+    <!--        function navigateWithParams(url) {-->
+    <!--            let address = url;-->
+    <!--            let encodedAddress = encodeURIComponent(address);-->
+    <!--            return encodedAddress-->
+    <!--        }-->
+    <!--    </script>-->
+</head>
+<body>
+<div class="search-container">
+    <input type="text" id="searchQuery" class="search-box" placeholder="请输入搜索书籍或作者...">
+    <button id="searchButton" class="search-button">搜索</button>
+</div>
+<h1>搜索：{{title}}</h1>
+
+<ul>
+    {% for item in items %}
+    <li>
+        <a href="/online_catalogue?book_id={{ item['book_id'] }}">
+            <img src="{{ item['thumb_url'] }}" alt="书籍封面"/>
+            <h1 class="book_name">{{ item["book_name"] }}</h1>
+            <p class="media">来源：{{ item["media"] }}小说</p>
+            <p class="author">作者：{{ item["author"] }}</p>
+            <p class="category">分类：{{ item["category"] }}</p>
+            <p class="score">评分：{{ item["score"] }}</p>
+            <p class="status">状态：{{ item["status"] }}</p>
+            <p class="word_number">字数：{{ item["word_number"] }}</p>
+            <p class="abstract">简介：{{ item["abstract"] }}</p>
+        </a>
+    </li>
+    {% endfor %}
+</ul>
+<script>
+        document.getElementById("searchButton").addEventListener("click", function(event) {
+            // 阻止表单的默认提交
+            event.preventDefault();
+
+            // 获取搜索框中的输入值
+            const query = document.getElementById("searchQuery").value.trim();
+
+            // 检查是否输入了搜索内容
+            if (query === "") {
+                alert("请输入搜索内容");
+            } else {
+                // 跳转到搜索结果页面，并传递搜索参数  在线
+                const searchUrl = `online_search?query=${encodeURIComponent(query)}`;
+                window.location.href = searchUrl;
+            }
+        });
+
+
+</script>
+</body>
+</html>

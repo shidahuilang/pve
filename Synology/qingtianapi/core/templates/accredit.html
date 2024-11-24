@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authorization Page</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', sans-serif;
+            background-color: #f7f7f7;
+            margin: 0;
+            padding: 0;
+        }
+
+       .container {
+            max-width: 40%;
+            margin: 5vh auto;
+            padding: 30px;
+            background-color: #fff;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            border-radius: 15px;
+        }
+        @media (max-width: 767px) {
+        .container {
+                    max-width: 90%;
+                    margin: 5vh auto;
+                    padding: 30px;
+                    background-color: #fff;
+                    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+                    border-radius: 15px;
+                }
+        }
+       .option {
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+        }
+
+        input[type="radio"] {
+            display: none;
+        }
+
+        label {
+            width: 90%;
+            font-size: 18px;
+            padding: 12px 20px;
+            background-color: #e0e0e0;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        input[type="text"] {
+            width: 90%;
+
+            padding: 15px;
+            margin-bottom: 25px;
+            border: 2px solid #d0d0d0;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        button {
+            width: 40%;
+            padding: 15px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        a.btn {
+            display: block;
+            text-align: center;
+            padding: 15px;
+            background-color: #4caf50;
+            color: #fff;
+            border-radius: 8px;
+            text-decoration: none;
+            margin: 25px;
+            font-size: 18px;
+            transition: background-color 0.3s ease;
+        }
+
+        a.btn:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="option">
+            <input type="radio" id="coffee" name="selection" checked>
+            <label for="coffee" id="titleLabel">未检测到授权码！请加管理员获取授权码！</label>
+        </div>
+        <a href="https://qm.qq.com/q/WQxJaskYc8" target="_blank" class="btn">点击加管理员</a>
+        <input type="text" id="authCodeInput" placeholder="输入授权码">
+        <button onclick="sendAuthCode()">提交授权码</button>
+    </div>
+
+    <script>
+        function sendAuthCode() {
+            const authCode = document.getElementById('authCodeInput').value;
+            fetch('/adt', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ authCode: authCode })
+            }).then(response => response.json()).then(data => {
+                    document.getElementById('titleLabel').innerText = data.success;
+
+            });
+        }
+    </script>
+</body>
+
+</html>

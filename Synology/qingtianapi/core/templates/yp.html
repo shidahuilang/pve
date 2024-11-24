@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>大灰狼接口</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            margin: 0;
+            background-color: #f9f9f9; /* 背景颜色 */
+        }
+
+        h2 {
+            text-align: center; /* 标题居中 */
+        }
+
+        .copy-text {
+            width: 90%; /* 全宽 */
+            max-width: 600px; /* 最大宽度 */
+            padding: 10px; /* 内边距 */
+            border: 1px solid #ccc; /* 边框 */
+            border-radius: 5px; /* 圆角边框 */
+            font-size: 16px; /* 字体大小 */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* 阴影效果 */
+            margin-bottom: 15px; /* 下边距 */
+            background-color: #fff; /* 背景颜色 */
+        }
+
+        button {
+            display: block; /* 使按钮块级显示 */
+            width: 100%; /* 全宽 */
+            max-width: 200px; /* 最大宽度 */
+            padding: 10px; /* 内边距 */
+            background-color: #4CAF50; /* 绿色背景 */
+            color: white; /* 白色文字 */
+            border: none; /* 无边框 */
+            cursor: pointer; /* 鼠标光标 */
+            font-size: 16px; /* 字体大小 */
+            margin: 0 auto; /* 居中 */
+            border-radius: 5px; /* 圆角边框 */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* 阴影效果 */
+        }
+
+        button:hover {
+            background-color: #45a049; /* 悬停时的绿色 */
+        }
+
+        /* 媒体查询 */
+        @media (max-width: 600px) {
+            .copy-text {
+                font-size: 14px; /* 小屏幕时字体稍小 */
+            }
+
+            button {
+                font-size: 14px; /* 小屏幕时字体稍小 */
+            }
+        }
+    </style>
+</head>
+<body>
+
+<h2>大灰狼接口</h2>
+<p id="textToCopy" class="copy-text">请问请问。</p>
+<button id="copyButton">复制</button>
+
+<script>
+    document.getElementById('copyButton').addEventListener('click', function() {
+        const textToCopy = document.getElementById('textToCopy').innerText; // 获取文本内容
+        const tempTextArea = document.createElement('textarea'); // 创建临时textarea
+        tempTextArea.value = textToCopy; // 将要复制的文本放入临时textarea
+        document.body.appendChild(tempTextArea); // 将临时textarea添加到文档中
+        tempTextArea.select(); // 选择文本
+        document.execCommand('copy'); // 复制选中的文本
+        document.body.removeChild(tempTextArea); // 移除临时textarea
+
+        // 提示用户文本已复制
+        alert('已复制到剪贴板: ' + textToCopy);
+    });
+</script>
+
+</body>
+</html>

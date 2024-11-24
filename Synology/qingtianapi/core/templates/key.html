@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}密钥获取</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', sans-serif;
+            background-color: #f9f9f9;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+       .container {
+            background-color: #fff;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+            padding: 40px;
+            max-width: 450px;
+        }
+
+        h2 {
+            color: #2c3e50;
+            font-size: 28px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+       .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            color: #444;
+            font-size: 16px;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        input {
+            padding: 12px;
+            border: 2px solid #bdc3c7;
+            border-radius: 8px;
+            font-size: 16px;
+            width: 90%;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+
+        button {
+            background-color: #3498db;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 25px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+       .get-code-group button {
+            margin-top: 10px;
+        }
+
+       .form-group2 button {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        #message {
+            color: #e74c3c;
+            font-size: 14px;
+        }
+        .instructions {
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    max-width: 600px;
+    margin: 20px auto;
+}
+
+.instructions h1 {
+    font-size: 1.5em;
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.instructions p {
+    font-size: 1em;
+    line-height: 1.6;
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.instructions p:last-child {
+    margin-bottom: 0;
+}
+
+    </style>
+</head>
+
+<body>
+<div class="container">
+    <h2>{{ title }} 密钥获取</h2>
+    <div class="form-group">
+        <label for="email">邮箱:</label>
+        <input type="email" id="email" placeholder="输入你的邮箱" required>
+    </div>
+    <div class="form-group get-code-group">
+        <label for="code">验证码:</label>
+        <input type="text" id="code" placeholder="输入验证码" required>
+        <button id="getCodeBtn" onclick="sendVerificationCode()">获取验证码</button>
+    </div>
+    <div class="form-group form-group2">
+        <button id="getSecretBtn" onclick="getSecret()">获取密钥</button>
+        <button id="queryKeyBtn" onclick="queryKey()">查询密钥</button>
+    </div>
+    <p id="message"></p>
+    <div class="instructions">
+        <h1>使用方法：</h1>
+        <p>阅读/源阅：详情页/阅读页右上角-登录-获取密钥-填写密钥-刷新</p>
+        <p>极简阅读：进入书源-登录-获取密钥-填写到书源首页密钥出</p>
+        <p>香色闺阁：进入源编辑-进入章节列表-下一级界面地址，将文字替换为密钥</p>
+    </div>
+</div>
+
+<script>
+        // 检验邮箱格式的函数
+        function validateEmail(email) {
+            const re = /\S+@\S+\.\S+/;
+            return re.test(email);
+        }
+
+        let countdownGetCode;
+        let countdownGetSecret;
+        let countdownQueryKey;
+        const getCodeBtn = document.getElementById('getCodeBtn');
+        const getSecretBtn = document.getElementById('getSecretBtn');
+        const queryKeyBtn = document.getElementById('queryKeyBtn');
+        const message = document.getElementById('message');
+
+        function disableButton(button, isDisabled) {
+            button.disabled = isDisabled;
+            if (isDisabled) {
+                button.style.backgroundColor = '#ccc';
+            } else {
+                button.style.backgroundColor = '#3498db';
+            }
+        }
+
+        function startCountdown(button, remainingTime, callback) {
+            disableButton(button, true);
+            let countdown = setInterval(() => {
+                button.textContent = `${remainingTime} 秒可重试`;
+                remainingTime--;
+                if (remainingTime < 0) {
+                    clearInterval(countdown);
+                    button.textContent = button.id === 'getCodeBtn'? '获取验证码' : button.id === 'getSecretBtn'? '获取密钥' : '查询密钥';
+                    disableButton(button, false);
+                    callback();
+                }
+            }, 1000);
+            return countdown;
+        }
+
+        getCodeBtn.addEventListener('click', async () => {
+            const emailInput = document.getElementById('email');
+            const email = emailInput.value;
+            if (!validateEmail(email)) {
+                message.textContent = '请输入有效的邮箱地址。';
+                return;
+            }
+            try {
+                const response = await fetch('/get_code', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email }),
+                });
+                const data = await response.json();
+                if (data.success) {
+                    if (data.message) {
+                        message.textContent = data.message;
+                    } else {
+                        message.textContent = '验证码发送成功，请前往邮箱查看，如果未找到请注意垃圾邮箱。';
+                    }
+                } else {
+                    if (data.message) {
+                        message.textContent = data.message;
+                    } else {
+                        message.textContent = '发送失败，请联系管理员 {{adminqq}} 或者重试！';
+                    }
+                }
+                countdownGetCode = startCountdown(getCodeBtn, 30, () => {
+                    countdownGetCode = null;
+                });
+            } catch (error) {
+                message.textContent = '发送失败，请联系管理员 {{adminqq}} 或者重试！';
+                disableButton(getCodeBtn, false);
+                countdownGetCode = null;
+            }
+        });
+
+        getSecretBtn.addEventListener('click', async () => {
+            const emailInput = document.getElementById('email');
+            const codeInput = document.getElementById('code');
+            const email = emailInput.value;
+            const code = codeInput.value;
+            if (!validateEmail(email) ||!code) {
+                message.textContent = '请输入有效的邮箱地址和验证码。';
+                return;
+            }
+            try {
+                const response = await fetch('/get_key', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, code }),
+                });
+                const data = await response.json();
+                if (data.success) {
+                    if (data.message) {
+                        message.textContent = data.message;
+                    } else {
+                        message.textContent = '密钥发送成功，请前往邮箱查看，如果未找到请注意垃圾邮箱。';
+                    }
+                } else {
+                    if (data.message) {
+                        message.textContent = data.message;
+                    } else {
+                        message.textContent = '发送失败，请联系管理员 {{adminqq}} 或者重试！';
+                    }
+                }
+                countdownGetSecret = startCountdown(getSecretBtn, 5, () => {
+                    countdownGetSecret = null;
+                });
+            } catch (error) {
+                message.textContent = '发送失败，请联系管理员 {{adminqq}} 或者重试！';
+                disableButton(getSecretBtn, false);
+                countdownGetSecret = null;
+            }
+        });
+
+        async function queryKey() {
+            const emailInput = document.getElementById('email');
+            const codeInput = document.getElementById('code');
+            const email = emailInput.value;
+            const code = codeInput.value;
+            if (!validateEmail(email) ||!code) {
+                message.textContent = '请输入有效的邮箱地址和验证码。';
+                return;
+            }
+            try {
+                const response = await fetch('/query_key', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, code }),
+                });
+                const data = await response.json();
+                if (data.success) {
+                    if (data.message) {
+                        message.textContent = data.message;
+                    } else {
+                        message.textContent = '查询成功，密钥信息已显示。';
+                    }
+                } else {
+                    if (data.message) {
+                        message.textContent = data.message;
+                    } else {
+                        message.textContent = '查询失败，请联系管理员 {{adminqq}} 或者重试！';
+                    }
+                }
+            } catch (error) {
+                message.textContent = '查询失败，请联系管理员 {{adminqq}} 或者重试！';
+            }
+            countdownQueryKey = startCountdown(queryKeyBtn, 5, () => {
+                countdownQueryKey = null;
+            });
+        }
+
+</script>
+</body>
+
+</html>

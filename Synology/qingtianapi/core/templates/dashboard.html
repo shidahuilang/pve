@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>后台管理</title>
+    <link href="{{ url_for('static', filename='css/bootstrap.css') }}" rel="stylesheet">
+    <style>
+        .table-responsive {
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2 class="mt-3">后台管理</h2>
+
+    <!-- 设置模块 -->
+    <div>
+        <h4 class="mt-5">设置模块</h4>
+        <form id="settingsForm">
+            <div class="input-group mb-3">
+                <input type="number" class="form-control" id="time_frame" placeholder="x 秒"
+                       value="{{ settings['time_frame'] }}" required>
+                <span class="input-group-text">秒内最多允许访问</span>
+                <input type="number" class="form-control" id="max_requests" placeholder="n 次"
+                       value="{{ settings['max_requests'] }}" required>
+                <span class="input-group-text">次</span>
+            </div>
+            <div class="input-group mb-3">
+                <span class="input-group-text">在线阅读最大访问次数</span>
+                <input type="number" class="form-control" id="online_max_requests" placeholder="n 次"
+                       value="{{ settings['online_max_requests'] }}" required>
+                <span class="input-group-text">次</span>
+            </div>
+            <div class="input-group mb-3">
+                <span class="input-group-text">封禁时长（秒）</span>
+                <input type="number" class="form-control" id="ban_duration" value="{{ settings['ban_duration'] }}"
+                       required>
+            </div>
+            <div class="input-group mb-3">
+                <span class="input-group-text">广告内容</span>
+                <input type="text" class="form-control" id="advertisement" value="{{ settings['advertisement'] }}">
+            </div>
+            <div class="input-group mb-3">
+                <span class="input-group-text">提示内容</span>
+                <input type="text" class="form-control" id="notification" value="{{ settings['notification'] }}">
+            </div>
+            <div class="input-group mb-3">
+                <span class="input-group-text">喜马拉雅cookie</span>
+                <input type="text" class="form-control" id="ximalayacookie" value="{{ settings['ximalayacookie'] }}">
+            </div>
+            <button type="submit" class="btn btn-primary">更新</button>
+        </form>
+    </div>
+<h4 class="mt-5">网站信息</h4>
+    <a type="button" class="btn btn-primary" href="/netset">修改网站信息</a>
+
+<h4 class="mt-5">服务器终端</h4>
+    <a type="button" class="btn btn-primary" href="/cmd">进入终端</a>
+
+<h4 class="mt-5">上传书源</h4>
+    <div class="container">
+
+        <form id="uploadForm" enctype="multipart/form-data">
+            <!-- 安卓阅读书源上传 (JSON格式) -->
+            <div class="mb-3">
+                <label for="androidSource" class="form-label">阅读四件套书源 (JSON格式)</label>
+                <input class="form-control" type="file" id="androidSource" accept=".json">
+            </div>
+
+            <!-- 纯享阅读书源上传 (JSON格式) -->
+            <div class="mb-3">
+                <label for="pureReadSource" class="form-label">低版本阅读书源 (JSON格式)</label>
+                <input class="form-control" type="file" id="pureReadSource" accept=".json">
+            </div>
+
+            <!-- 极简阅读书源上传 (MRS格式) -->
+            <div class="mb-3">
+                <label for="minimalSource" class="form-label">用心读书书源 (MRS格式)</label>
+                <input class="form-control" type="file" id="minimalSource" accept=".mrs">
+            </div>
+
+            <!-- 香色闺阁书源上传 (XBS格式) -->
+            <div class="mb-3">
+                <label for="xiangseSource" class="form-label">香色闺阁书源 (XBS格式)</label>
+                <input class="form-control" type="file" id="xiangseSource" accept=".xbs">
+            </div>
+
+            <button type="button" class="btn btn-primary" onclick="uploadFiles()">上传文件</button>
+        </form>
+    </div>
+    <!-- 用户模块 -->
+    <h4 class="mt-5">用户管理</h4>
+    <p class="mb-3">用户数：{{ settings['user_number'] }}</p>
+    <p class="mb-3">在线阅读次数：{{ online_reader }}</p>
+    <!-- 搜索框 -->
+    <div class="input-group mb-3">
+        <input type="text" class="form-control" placeholder="根据邮箱或密钥搜索" id="searchInput">
+        <button class="btn btn-outline-secondary" type="button" id="searchButton">搜索</button>
+    </div>
+
+    <!-- 用户列表带横向滚动条 -->
+     <div class="table-responsive">
+        <table class="table table-bordered table-hover text-center">
+            <thead class="thead-light">
+            <tr>
+                <th>邮箱</th>
+                <th>
+                    <button class="btn btn-link text-decoration-none p-0" id="sortRegistrationTime">注册时间<i class="fas fa-sort"></i></button>
+                </th>
+                <th>
+                    <button class="btn btn-link text-decoration-none p-0" id="sortLastReadTime">最后阅读时间<i class="fas fa-sort"></i></button>
+                </th>
+                <th>
+                    <button class="btn btn-link text-decoration-none p-0" id="sortReadCount">总阅读次数<i class="fas fa-sort"></i></button>
+                </th>
+                <th>
+                    <button class="btn btn-link text-decoration-none p-0" id="daySortReadCount">当日阅读次数<i class="fas fa-sort"></i></button>
+                </th>
+                <th>
+                    <button class="btn btn-link text-decoration-none p-0" id="sortBanCount">封禁次数<i class="fas fa-sort"></i></button>
+                </th>
+                <th>
+                    <button class="btn btn-link text-decoration-none p-0" id="sortBanStatus">封禁状态<i class="fas fa-sort"></i></button>
+                </th>
+                <th>
+                    <button class="btn btn-link text-decoration-none p-0" id="sortUnbanTime">解封时间<i class="fas fa-sort"></i></button>
+                </th>
+                <th>
+                    <button class="btn btn-link text-decoration-none p-0" id="vip">会员<i class="fas fa-sort"></i></button>
+                </th>
+                <th>密钥</th>
+                <th>操作</th>
+            </tr>
+            </thead>
+            <tbody id="userList">
+            <!-- 用户数据将通过 JavaScript 填充 -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+<script src="{{ url_for('static', filename='js/bootstrap.js') }}"></script>
+</body>
+</html>

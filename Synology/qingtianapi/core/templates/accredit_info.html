@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>授权</title>
+<link href="{{ url_for('static', filename='css/bootstrap.css') }}" rel="stylesheet"></head>
+<body>
+    <div class="container my-4">
+        <h1>网站初始化设置</h1>
+        <form id="settingsForm">
+            <!-- 每x秒内最大允许访问y次，否则封禁z秒 -->
+            <div class="mt-3 d-inline-flex align-items-center">
+                <!-- Label and input for x seconds -->
+                <label for="xSeconds" class="me-2">允许</label>
+                <input type="number" class="form-control me-2" id="xSeconds" placeholder="x秒" style="width: 45px;">
+
+                <!-- Label and input for y requests -->
+                <label for="yVisits" class="me-2">s</label>
+                <input type="number" class="form-control me-2" id="yVisits" placeholder="y次" style="width: 45px;">
+
+                <!-- Label and input for z ban seconds -->
+                <label for="zBanSeconds" class="me-2">次，超封密钥</label>
+                <input type="number" class="form-control me-2" id="zBanSeconds" placeholder="z秒" style="width: 60px;">s
+            </div>
+
+            <!-- 在线阅读每天每ip最大访问次数 -->
+            <div class="mb-3 mt-3">
+                <label for="dailyLimit" class="form-label">在线阅读每天每IP最大访问次数</label>
+                <input type="number" class="form-control" id="dailyLimit" placeholder="最大访问次数">
+            </div>
+
+            <!-- 章节尾部提示广告 -->
+            <div class="mb-3">
+                <label for="chapterAd" class="form-label">章尾提示</label>
+                <input type="text" class="form-control" id="chapterAd" placeholder="提示广告">
+            </div>
+
+            <!-- 密钥错误提示 -->
+            <div class="mb-3">
+                <label for="keyErrorMsg" class="form-label">密钥错误提示</label>
+                <input type="text" class="form-control" id="keyErrorMsg" placeholder="密钥错误提示">
+            </div>
+
+            <!-- QQ群 -->
+            <div class="mb-3">
+                <label for="qqGroup" class="form-label">QQ群链接</label>
+                <input type="text" class="form-control" id="qqGroup" placeholder="QQ群">
+            </div>
+
+            <!-- 电报群 -->
+            <div class="mb-3">
+                <label for="telegramGroup" class="form-label">电报群链接</label>
+                <input type="text" class="form-control" id="telegramGroup" placeholder="电报群">
+            </div>
+
+
+        <!-- 管理员账号 -->
+            <div class="mb-3">
+                <label for="adminAccount" class="form-label">管理员账号</label>
+                <input type="email" class="form-control" id="adminAccount" placeholder="管理员账号 (必须为邮箱)">
+                <div id="adminAccountError" class="text-danger"></div>
+            </div>
+
+            <!-- 管理员密码 -->
+            <div class="mb-3">
+                <label for="adminPassword" class="form-label">管理员密码</label>
+                <input type="password" class="form-control" id="adminPassword" placeholder="管理员密码">
+                <div id="adminPasswordError" class="text-danger"></div>
+            </div>
+
+            <!-- 网站名称 -->
+            <div class="mb-3">
+                <label for="siteName" class="form-label">网站名称</label>
+                <input type="text" class="form-control" id="siteName" placeholder="网站名称">
+                <div id="siteNameError" class="text-danger"></div>
+            </div>
+
+            <!-- 验证码邮箱 -->
+            <div class="mb-3">
+                <label for="emailSmtp" class="form-label">邮箱smtp</label>
+                <input type="text" class="form-control" id="emailSmtp" placeholder="如：smtp.163.com">
+                <div id="emailSmtpError" class="text-danger"></div>
+            </div>
+            <div class="mb-3">
+                <label for="emailCaptcha" class="form-label">验证码邮箱</label>
+                <input type="email" class="form-control" id="emailCaptcha" placeholder="邮箱必须使用与smtp对应邮箱">
+                <div id="emailCaptchaError" class="text-danger"></div>
+            </div>
+
+            <!-- 邮件授权码 -->
+            <div class="mb-3">
+                <label for="emailAuthCode" class="form-label">邮件授权码</label>
+                <input type="text" class="form-control" id="emailAuthCode" placeholder="邮件授权码">
+                <div id="emailAuthCodeError" class="text-danger"></div>
+            </div>
+            <div class="d-inline-flex align-items-center">
+                <button type="button" class="btn btn-primary" onclick="submitData()">提交/修改数据</button>
+                <p class="ms-3">提交数据方可生成唯一授权码（注：切勿随意修改管理员账号，如果修改管理员账号需要重新获取授权码）</p>
+            </div>
+            <!-- 网站授权码 -->
+            <div class="mb-3 mt-3">
+                <label for="siteAuthCode" class="form-label">网站授权码</label>
+                <input type="text" class="form-control" id="siteAuthCode" placeholder="网站授权码">
+                <div id="siteAuthCodeError" class="text-danger"></div>
+                <div id="authCodeMessage" class="mt-2 text-danger"></div>
+            </div>
+
+            <button type="button" class="btn btn-primary" onclick="submitAccredit()">授权</button>
+        </form>
+    </div>
+
+    <script>
+
+        // 页面加载时从接口获取当前信息并填充
+        window.onload = function() {
+            fetch('/get-settings')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('xSeconds').value = data.xSeconds;
+                    document.getElementById('yVisits').value = data.yVisits;
+                    document.getElementById('zBanSeconds').value = data.zBanSeconds;
+                    document.getElementById('dailyLimit').value = data.dailyLimit;
+                    document.getElementById('chapterAd').value = data.chapterAd;
+                    document.getElementById('keyErrorMsg').value = data.keyErrorMsg;
+                    document.getElementById('adminAccount').value = data.adminAccount;
+                    document.getElementById('adminPassword').value = data.adminPassword;
+                    document.getElementById('siteName').value = data.siteName;
+                    document.getElementById('qqGroup').value = data.qqGroup;
+                    document.getElementById('telegramGroup').value = data.telegramGroup;
+                    document.getElementById('emailSmtp').value = data.emailSmtp;
+                    document.getElementById('emailCaptcha').value = data.emailCaptcha;
+                    document.getElementById('emailAuthCode').value = data.emailAuthCode;
+                });
+        }
+
+        function submitData() {
+            // 获取表单元素
+            const adminAccount = document.getElementById("adminAccount");
+            const adminPassword = document.getElementById("adminPassword");
+            const siteName = document.getElementById("siteName");
+            const emailSmtp = document.getElementById("emailSmtp");
+            const emailCaptcha = document.getElementById("emailCaptcha");
+            const emailAuthCode = document.getElementById("emailAuthCode");
+
+            // 错误提示元素
+            const adminAccountError = document.getElementById("adminAccountError");
+            const adminPasswordError = document.getElementById("adminPasswordError");
+            const siteNameError = document.getElementById("siteNameError");
+            const emailSmtpError = document.getElementById("emailSmtpError");
+            const emailCaptchaError = document.getElementById("emailCaptchaError");
+            const emailAuthCodeError = document.getElementById("emailAuthCodeError");
+
+            // 重置错误提示和样式
+            [adminAccount, adminPassword, siteName, emailSmtp, emailCaptcha, emailAuthCode].forEach(el => {
+                el.classList.remove("is-invalid");
+            });
+            [adminAccountError, adminPasswordError, siteNameError, emailSmtpError, emailCaptchaError, emailAuthCodeError].forEach(el => {
+                el.textContent = "";
+            });
+
+            let valid = true;
+
+            // 验证字段
+            if (!adminAccount.value || !adminAccount.value.includes('@')) {
+                adminAccount.classList.add("is-invalid");
+                adminAccountError.textContent = "管理员账号必须为邮箱格式";
+                valid = false;
+            }
+            if (!adminPassword.value) {
+                adminPassword.classList.add("is-invalid");
+                adminPasswordError.textContent = "管理员密码为必填项";
+                valid = false;
+            }
+            if (!siteName.value) {
+                siteName.classList.add("is-invalid");
+                siteNameError.textContent = "网站名称为必填项";
+                valid = false;
+            }
+            if (!emailSmtp.value) {
+                emailSmtp.classList.add("is-invalid");
+                emailSmtpError.textContent = "邮件smtp为必填项";
+                valid = false;
+            }
+            if (!emailCaptcha.value || !emailCaptcha.value.includes('@')) {
+                emailCaptcha.classList.add("is-invalid");
+                emailCaptchaError.textContent = "验证码邮箱必须为邮箱格式";
+                valid = false;
+            }
+            if (!emailAuthCode.value) {
+                emailAuthCode.classList.add("is-invalid");
+                emailAuthCodeError.textContent = "邮件授权码为必填项";
+                valid = false;
+            }
+
+            // 如果验证通过，提交其他设置数据
+            if (valid) {
+                const settingsData = {
+                    xSeconds: document.getElementById('xSeconds').value,
+                    yVisits: document.getElementById('yVisits').value,
+                    zBanSeconds: document.getElementById('zBanSeconds').value,
+                    dailyLimit: document.getElementById('dailyLimit').value,
+                    chapterAd: document.getElementById('chapterAd').value,
+                    keyErrorMsg: document.getElementById('keyErrorMsg').value,
+                    adminAccount: adminAccount.value,
+                    adminPassword: adminPassword.value,
+                    siteName: siteName.value,
+                    qqGroup: document.getElementById('qqGroup').value,
+                    telegramGroup: document.getElementById('telegramGroup').value,
+                    emailSmtp: emailSmtp.value,
+                    emailCaptcha: emailCaptcha.value,
+                    emailAuthCode: emailAuthCode.value
+                };
+
+                fetch('/submit-settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(settingsData)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // 提交成功后调用授权码提交函数
+                    submitAccredit();
+                });
+            }
+        }
+
+        function submitAccredit() {
+            const siteAuthCode = document.getElementById('siteAuthCode').value;
+            const siteAuthCodeError = document.getElementById("siteAuthCodeError");
+            const authCodeMessage = document.getElementById('authCodeMessage');
+
+
+
+            siteAuthCodeError.textContent = "";
+            siteAuthCodeError.classList.remove("is-invalid");
+
+            // 验证网站授权码
+            if (!siteAuthCode) {
+                siteAuthCodeError.classList.add("is-invalid");
+                siteAuthCodeError.textContent = "授权数据已提交，授权码已发送至你的管理员账号邮箱（注：如之前已激活，请查看历史邮箱信息）";
+                return;
+            }
+
+            // 直接提交授权码
+            fetch('/adt', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ authCode: siteAuthCode })
+            })
+            .then(response => response.json())
+            .then(data => {
+                authCodeMessage.textContent = data.msg;
+                if (data.success) {
+                    authCodeMessage.classList.remove('text-danger');
+                    authCodeMessage.classList.add('text-success');
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    authCodeMessage.classList.remove('text-success');
+                    authCodeMessage.classList.add('text-danger');
+                }
+            });
+        }
+
+
+
+
+    </script>
+
+<script src="{{ url_for('static', filename='js/bootstrap.js') }}"></script></body>
+</html>

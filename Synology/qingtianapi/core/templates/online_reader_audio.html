@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <link href="{{ url_for('static', filename='css/bootstrap.css') }}" rel="stylesheet">
+    <style>
+        body, html {
+            height: 100%;
+
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            background: #000;
+            color: white;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        .player-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            width: 30%;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            margin-left:33.3%;
+        }
+
+        /* 高斯模糊背景 */
+        .blur-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            filter: blur(20px);
+            z-index: 0;
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1;
+        }
+
+        /* 播放转盘 */
+        .turntable {
+            flex: 2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2;
+        }
+
+        .turntable img {
+            width: 40%;
+            height: 40%;
+            border-radius: 50%;
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* 进度条部分 */
+        .controls {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            z-index: 2;
+        }
+
+        .progress-container {
+            width: 100%;
+            display: flex;
+            align-items: center;
+        }
+
+        .progress-container input[type="range"] {
+            flex: 1;
+            margin: 0 10px;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .chapter-title {
+            text-align: center;
+            font-size: 1.5em;
+            margin-bottom: 10px;
+            z-index: 1;
+        }
+
+        .btn-custom {
+            margin: 0 10px;
+            width: 40px;
+            height: 40px;
+            background-size: cover;
+            border: none;
+            outline: none;
+        }
+
+
+.sidebar {
+    position: fixed;
+    right: -200px;
+    top: 0;
+    width: 200px;
+    height: 100%;
+    background-color: #f5f5f5;
+    transition: right 0.3s ease;
+    overflow-y: auto;
+    z-index: 3;
+}
+
+.sidebar.active {
+    right: 0;
+}
+
+.list-group-item {
+    cursor: pointer;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    padding: 10px 15px;
+    color: #444;
+    transition: background-color 0.3s ease;
+}
+
+.list-group-item.active {
+    background-color: #007bff;
+    color: #f0f0f0;
+}
+
+.overlay-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+    z-index: 2;
+}
+
+.overlay-sidebar.active {
+    display: block;
+}
+
+
+        @media (max-width: 768px) {
+            .turntable img {
+                width: 60%;
+                height: 60%;
+            }
+            .player-container {
+            width: 100%;
+            margin-left:0%;
+        }
+        }
+        #speedBtn {
+    margin: 0 10px;
+    padding: 5px 10px;
+    background-color: #007bff;
+    color: white;
+    border-radius: 10px;
+    border: none;
+    outline: none;
+    cursor: pointer;
+}
+.btn-custom {
+
+    border-radius: 50%;  /* 圆形按钮 */
+}
+    </style>
+</head>
+<body>
+
+<div class="player-container" style="background-image: url('{{ thumb_url }}');">
+    <!-- 高斯模糊背景 -->
+    <div class="blur-background" style="background-image: url('{{ thumb_url }}');"></div>
+    <div class="overlay"></div>
+
+    <!-- 播放转盘 -->
+    <div class="turntable">
+        <img src="{{ thumb_url }}" alt="{{ title }}"/>
+    </div>
+
+    <!-- 章节标题 -->
+    <div class="chapter-title" id="chapterTitle">{{ title }}</div>
+
+    <!-- 控制部分 -->
+    <div class="controls">
+        <div class="progress-container">
+            <span id="currentTime">00:00</span>
+            <input type="range" id="progressBar" value="0" max="100">
+            <span id="remainingTime">-00:00</span>
+        </div>
+        <div class="buttons">
+            <!-- 倍速按钮 -->
+            <button id="speedBtn">1x</button>
+            <!-- 上一章按钮 -->
+            <button class="btn btn-custom" id="prevBtn" style="background-image: url('data:image/png;base64, {{ base64_prev }}');"></button>
+            <!-- 播放/暂停按钮 -->
+            <button class="btn btn-custom" id="playPauseBtn" style="background-image: url('data:image/png;base64, {{ base64_play }}');"></button>
+            <!-- 下一章按钮 -->
+            <button class="btn btn-custom" id="nextBtn" style="background-image: url('data:image/png;base64, {{ base64_next }}');"></button>
+            <!-- 目录按钮 -->
+            <button class="btn btn-custom" id="dirBtn" style="background-image: url('data:image/png;base64, {{ base64_dir }}');"></button>
+        </div>
+    </div>
+
+    <!-- 音频播放 -->
+    <audio id="audioPlayer"></audio>
+    <!-- 侧边栏 -->
+    <div class="sidebar" id="sidebar">
+        <ul id="chapterList" class="list-group list-group-flush">
+            <!-- 章节列表 -->
+        </ul>
+    </div>
+
+    <!-- 目录遮罩层 -->
+    <div class="overlay-sidebar" id="overlay"></div>
+</div>
+
+<script>
+    const currentItemId = '{{ item_id }}';
+    const currentBookId = '{{ book_id }}';
+    const thumbUrl = '{{ thumb_url }}';
+    const speedBtn = document.getElementById('speedBtn');
+    const speeds = [0.75, 1, 1.5, 2, 2.5, 3];
+    let currentSpeedIndex = 1; // Default to 1x speed
+
+    speedBtn.onclick = () => {
+        currentSpeedIndex = (currentSpeedIndex + 1) % speeds.length;
+        const newSpeed = speeds[currentSpeedIndex];
+        speedBtn.textContent = `${newSpeed}x`;
+        audioPlayer.playbackRate = newSpeed; // Change playback speed
+    };
+
+    // 播放器元素
+    const audioPlayer = document.getElementById('audioPlayer');
+    const playPauseBtn = document.getElementById('playPauseBtn');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const progressBar = document.getElementById('progressBar');
+    const currentTimeElem = document.getElementById('currentTime');
+    const remainingTimeElem = document.getElementById('remainingTime');
+
+    let isPlaying = false;
+
+    // 预加载音频并去除 referer
+    function preloadAudio() {
+        fetch('{{ content }}', {
+            method: 'GET',
+            mode: 'cors',
+            credentials: 'omit',
+            referrerPolicy: 'no-referrer'
+        })
+        .then(response => response.blob())
+        .then(blob => {
+            const objectURL = URL.createObjectURL(blob);
+            audioPlayer.src = objectURL;
+
+            // 监听 canplaythrough 事件，确保缓存完成后再播放
+            audioPlayer.addEventListener('canplaythrough', () => {
+                audioPlayer.play();
+                isPlaying = true;
+                playPauseBtn.style.backgroundImage = "url('data:image/png;base64, {{ base64_pause }}')";
+            });
+        })
+        .catch(error => console.error('音频加载失败', error));
+    }
+
+    // 页面加载时预加载音频
+    window.onload = preloadAudio;
+
+    // 播放/暂停功能
+    playPauseBtn.onclick = () => {
+        if (isPlaying) {
+            playPauseBtn.style.backgroundImage = "url('data:image/png;base64, {{ base64_play }}')";
+            audioPlayer.pause();
+        } else {
+            playPauseBtn.style.backgroundImage = "url('data:image/png;base64, {{ base64_pause }}')";
+            audioPlayer.play();
+        }
+        isPlaying = !isPlaying;
+    };
+
+    // 请求目录
+    fetch('/detail?bookId=' + currentBookId)
+        .then(response => response.json())
+        .then(data => {
+            const chapterList = data.data.chapterListWithVolume.flat();
+            populateChapterList(chapterList);
+        });
+
+    // 填充章节列表
+    function populateChapterList(list) {
+        const chapterList = document.getElementById('chapterList');
+        chapterList.innerHTML = '';
+        list.forEach((chapter, index) => {
+            const listItem = document.createElement('li');
+            listItem.classList.add('list-group-item');
+            listItem.textContent = chapter.title;
+            listItem.onclick = () => navigateToChapter(chapter.itemId);
+            if (chapter.itemId === currentItemId) {
+                listItem.classList.add('active');
+            }
+            chapterList.appendChild(listItem);
+        });
+
+        // 上一章/下一章按钮
+        const currentChapterIndex = list.findIndex(chapter => chapter.itemId === currentItemId);
+        prevBtn.onclick = () => {
+            if (currentChapterIndex > 0) {
+                navigateToChapter(list[currentChapterIndex - 1].itemId);
+            }
+        };
+        nextBtn.onclick = () => {
+            if (currentChapterIndex < list.length - 1) {
+                navigateToChapter(list[currentChapterIndex + 1].itemId);
+            }
+        };
+    }
+
+    // 跳转到指定章节
+    function navigateToChapter(itemId) {
+        window.location.href = `/online_reader?item_id=${itemId}&book_id=${currentBookId}&thumb_url={{ thumb_url_base64 }}`;
+    }
+
+    // 目录按钮
+    const dirBtn = document.getElementById('dirBtn');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+
+    dirBtn.onclick = () => {
+        sidebar.classList.toggle('active');
+        overlay.classList.toggle('active');
+    };
+
+    overlay.onclick = () => {
+        sidebar.classList.remove('active');
+        overlay.classList.remove('active');
+    };
+
+    // 进度条拖动
+    progressBar.oninput = (e) => {
+        const value = e.target.value;
+        const duration = audioPlayer.duration;
+        audioPlayer.currentTime = (value / 100) * duration;
+    };
+
+    audioPlayer.ontimeupdate = () => {
+        const currentTime = audioPlayer.currentTime;
+        const duration = audioPlayer.duration;
+        progressBar.value = (currentTime / duration) * 100;
+        currentTimeElem.textContent = formatTime(currentTime);
+        remainingTimeElem.textContent = '-' + formatTime(duration - currentTime);
+    };
+
+    function formatTime(seconds) {
+        const minutes = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60).toString().padStart(2, '0');
+        return `${minutes}:${secs}`;
+    }
+            // 结束自动跳转到下一章节
+        audioPlayer.addEventListener('ended', () => {
+            const chapterList = document.getElementById('chapterList').children;
+            let currentIndex = Array.from(chapterList).findIndex(item => item.classList.contains('active'));
+            if (currentIndex < chapterList.length - 1) {
+                chapterList[currentIndex + 1].click();
+            }
+        });
+</script>
+
+</body>
+</html>

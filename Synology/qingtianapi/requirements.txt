@@ -1,0 +1,9 @@
+requests
+flask
+bs4
+lxml
+cryptography
+redis
+resend
+opencc-python-reimplemented
+psutil

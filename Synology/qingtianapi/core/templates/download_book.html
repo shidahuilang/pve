@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>下载书籍</title>
+    <link href="{{ url_for('static', filename='css/bootstrap.css') }}" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">下载书籍 - {{ book_name }}</h1>
+
+        <!-- 显示书籍信息 -->
+        <div class="book-info mb-4">
+            <p>来源：{{ media }}小说</p >
+            <p>作者：{{ author }}</p >
+            <p>分类：{{ category }}</p >
+            <p>评分：{{ score }}</p >
+            <p>状态：{{ status }}</p >
+            <p>字数：{{ word_number }}</p >
+            <p>简介：{{ abstract }}</p >
+        </div>
+
+        <div class="mb-3">
+            <label for="key" class="form-label">密钥：</label>
+            <input type="text" id="key" class="form-control" placeholder="请输入密钥">
+        </div>
+
+        <div class="text-center">
+            <button class="btn btn-primary" id="startBtn" onclick="startDownload()">开始下载</button>
+        </div>
+        <p id="progress-text" class="text-center mt-2" style="display: none;">加载中，请稍后...</p >
+        <h3 class="mt-5">处理进度</h3>        <!-- 初始时隐藏提示词 -->
+        
+        <div class="progress mb-4" id="progress-container" style="height: 30px;">
+            <div id="progress-bar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+        </div>
+
+    </div>
+
+    <script>
+        function startDownload() {
+            const key = document.getElementById('key').value;
+
+            if (!key) {
+                alert("请输入密钥。");
+                return;
+            }
+
+            // 避免重复点击
+            const startBtn = document.getElementById('startBtn');
+            startBtn.disabled = true;
+
+            const progressText = document.getElementById('progress-text');
+            progressText.style.display = 'block';
+
+            const params = new URLSearchParams({
+                bookId: "{{ book_id }}",
+                bookName: "{{ book_name }}",
+                media: "{{ media }}",
+                key: `${key}`
+            });
+
+            const eventSource = new EventSource(`/download_book?${params.toString()}`);
+            const progressBar = document.getElementById('progress-bar');
+            let bookContent = `{{ book_name }}\n作者：{{ author }}\n分类：{{ category }}\t字数：{{ word_number }}\t状态：{{ status }}\n简介：\n\t{{ abstract }}\n\n`;
+
+            eventSource.onmessage = function(event) {
+                const data = event.data;
+            
+                if (data.startsWith("chapter_title:")) {
+                    const title = data.slice("chapter_title:".length);
+                    bookContent += title + "\n"; 
+                } else if (data.startsWith("chapter_content:")) {
+                    const content = JSON.parse(data.slice("chapter_content:".length));
+            
+
+                    const formattedContent = content.replace(/<br>/g, "\n");
+                    bookContent += formattedContent + "\n\n"; 
+                } else if (data.startsWith("progress:")) {
+                    const progress = parseFloat(data.slice("progress:".length));
+                    progressBar.style.width = progress + "%";
+                    progressBar.setAttribute("aria-valuenow", progress);
+                    progressBar.innerText = progress.toFixed(2) + "%";
+
+                    if (progress === 0) {
+                        progressText.innerText = "加载中，请稍后...";
+                    } else if (progress < 100) {
+                        progressText.innerText = "后台正在极速处理中...请勿关闭此页";
+                    }
+
+                    // 进度条未到100%时禁用开始下载按钮
+                    if (progress < 100) {
+                        startBtn.disabled = true;
+                    }
+                } else if (data === "complete") {
+                    eventSource.close();
+                    // alert("下载完成！");
+                    downloadBookFile(bookContent, "{{ book_name }}.txt");
+                }
+            };
+        }
+
+        // 生成并下载 .txt 文件
+        function downloadBookFile(content, fileName) {
+            const blob = new Blob([content], { type: "text/plain" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = fileName;
+            link.click();
+
+            // 下载完成后启用开始下载按钮
+            document.getElementById('startBtn').disabled = false;
+        }
+    </script>
+</body>
+</html>

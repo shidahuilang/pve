@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In/Sign Up Form</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+
+<div class="container" id="container">
+    <div class="form-container sign-up-container">
+        <form method="POST">
+            <h1>创建帐号</h1>
+            <input id="register_username" maxlength="20" minlength="2" name="username" placeholder="用户名" required="" type="text" value="">
+            <input id="register_email" name="email" placeholder="邮箱" required="" type="email" value="">
+            <input id="register_password" minlength="6" name="password" placeholder="密码" required="" type="password" value="">
+            <button type="submit" name="register" value="register">注册</button>
+        </form>
+    </div>
+
+    <div class="form-container sign-in-container">
+        <form method="POST">
+            <h1>登入帐号</h1>
+            <input id="login_email" name="email" placeholder="邮箱" required="" type="email" value="">
+            <input id="login_password" name="password" placeholder="密码" required="" type="password" value="">
+            <a href="#">忘记密码?</a>
+            <button type="submit" name="login" value="login">登入</button>
+        </form>
+    </div>
+    <div class="overlay-container">
+        <div class="overlay">
+            <div class="overlay-panel overlay-left">
+                <h1>准备好了吗！</h1>
+                <p>赶紧注册帐号，以使用网站的所有功能</p>
+                <button class="ghost" id="signIn">登入</button>
+            </div>
+            <div class="overlay-panel overlay-right">
+                <h1>欢迎回来！</h1>
+                <p>输入你的帐号，以使用网站的所有功能</p>
+                <button class="ghost" id="signUp">注册</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const signUpButton = document.getElementById('signUp');
+    const signInButton = document.getElementById('signIn');
+    const container = document.getElementById('container');
+
+    signUpButton.addEventListener('click', () => {
+        container.classList.add("right-panel-active");
+    });
+
+    signInButton.addEventListener('click', () => {
+        container.classList.remove("right-panel-active");
+    });
+    document.addEventListener("DOMContentLoaded", function() {
+        // 检查模板中是否存在“alert_message”和“alert_type”
+        const alertMessage = "{{ alert_message|safe }}";
+        const alertType = "{{ alert_type|safe }}";
+
+        if (alertMessage) {
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: alertType,
+                title: alertMessage,
+                showConfirmButton: false,
+                timer: 3000
+            });
+        }
+    });
+</script>
+
+</body>
+</html>

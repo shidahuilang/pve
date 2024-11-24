@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>服务器终端</title>
+    <!-- 引入 Bootstrap CSS -->
+    <link href="{{ url_for('static', filename='css/bootstrap.css') }}" rel="stylesheet"></head>
+</head>
+<body class="bg-light">
+    <div class="container py-5">
+        <h1 class="mb-4 text-center">服务器终端</h1>
+
+        <!-- 自定义命令输入 -->
+        <div class="mb-4">
+            <div class="input-group">
+                <input type="text" id="commandInput" class="form-control" placeholder="输入自定义命令" />
+                <button class="btn btn-primary" onclick="sendCommand()">执行命令</button>
+            </div>
+        </div>
+
+        <!-- 预设命令按钮组 -->
+        <h3>预设命令：</h3>
+        <div class="mb-4">
+            <button class="btn btn-secondary me-2 mb-2" onclick="sendPresetCommand('tail -n 100 log/fanqie.log | tac')">查看日志 (`tail -n 100 log/fanqie.log | tac`)</button>
+            <button class="btn btn-secondary me-2 mb-2" onclick="sendPresetCommand('ls')">列出文件 (`ls`)</button>
+            <button class="btn btn-secondary me-2 mb-2" onclick="sendPresetCommand('df -h')">查看磁盘空间 (`df -h`)</button>
+            <button class="btn btn-secondary me-2 mb-2" onclick="sendPresetCommand('uptime')">查看服务器运行时间 (`uptime`)</button>
+            <button class="btn btn-secondary me-2 mb-2" onclick="sendPresetCommand('whoami')">当前用户 (`whoami`)</button>
+            <button class="btn btn-secondary me-2 mb-2" onclick="sendPresetCommand('free -m')">内存使用情况 (`free -m`)</button>
+        </div>
+
+        <!-- 输出结果框 -->
+        <h3>输出结果：</h3>
+        <pre id="outputBox" class="bg-white p-3 border rounded" style="min-height: 200px;">点击命令按钮以查看结果</pre>
+    </div>
+
+    <!-- 引入 Bootstrap 和 Popper.js -->
+    <script src="{{ url_for('static', filename='js/bootstrap.js') }}"></script></body>
+
+    <!-- JavaScript代码 -->
+    <script>
+        async function sendCommand() {
+            const command = document.getElementById("commandInput").value;
+            if (!command) {
+                displayOutput("请输入一个命令。");
+                return;
+            }
+            executeCommand(command);
+        }
+
+        async function sendPresetCommand(command) {
+            executeCommand(command);
+        }
+
+        async function executeCommand(command) {
+            const outputBox = document.getElementById("outputBox");
+            outputBox.innerText = "正在执行...";
+
+            try {
+                const response = await fetch("/terminal", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ command: command })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    outputBox.innerText = result.output || "命令执行成功，无返回结果。";
+                } else {
+                    outputBox.innerText = result.error || "未知错误。";
+                }
+            } catch (error) {
+                outputBox.innerText = "错误: " + error;
+            }
+        }
+
+        function displayOutput(message) {
+            document.getElementById("outputBox").innerText = message;
+        }
+    </script>
+</body>
+</html>
