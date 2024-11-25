@@ -585,8 +585,8 @@ h1 {
     <button id="searchButton" class="search-button">搜索</button>
 </div>
 <div class="join-chat">
-    <a href="/key" class="chat-button">🔑获取密钥</a>
-    <a href="/coffee" class="chat-button">💴打赏赞助</a>
+    <a href="/key" class="chat-button">🔑 获取密钥</a>
+    <a href="/coffee" class="chat-button">支持一下 ☕</a>
 </div>
 <div class="join-chat">
 
@@ -602,13 +602,25 @@ h1 {
     <div class="yuedu">
         <button onclick="downloadjijian()">用心读书（苹果）书源</button>
         <button onclick="window.location.href='yuedu://booksource/importonline?src=' + encodeURIComponent(window.location.href) + '/download/yuedu'">阅读/源阅(四件套)</button>
-        <p>注：本书源目前支持番茄、七猫、得间、QQ、熊猫、起点（69来源）、喜马拉雅的切换，导入一共为4件套，分别为：融合版（小说、漫画、听书融合在一起，点击登录切换，操作难度颇高，小白慎用）、纯小说（点击登录可切换搜索源）、纯听书（点击登录可切换搜索源以及音色）、纯漫画（当前仅支持番茄漫画） |  所有书源均需先注册密钥填写密钥后方可使用！</p>
+        <p>
+    注：本书源目前支持
+    <span style="color: red; display: inline-block;">番茄</span>、
+    <span style="color: red; display: inline-block;">七猫</span>、
+    <span style="color: red; display: inline-block;">得间</span>、
+    <span style="color: red; display: inline-block;">QQ</span>、
+    <span style="color: red; display: inline-block;">熊猫</span>、
+    <span style="color: red; display: inline-block;">起点（69来源）</span>、
+    <span style="color: red; display: inline-block;">喜马拉雅</span>的切换。
+，导入一共为4件套，分别为：融合版（小说、漫画、听书融合在一起，点击登录切换，操作难度颇高，小白慎用）、纯小说（点击登录可切换搜索源）、纯听书（点击登录可切换搜索源以及音色）、纯漫画（当前仅支持番茄漫画） |  所有书源均需先注册密钥填写密钥后方可使用！</p>
         <button onclick="downloadxiangse()">香色闺阁（苹果）书源</button>
         <p>注：此书源只有核心功能，且密钥需要手动在章节列表的reader接口填写（此书源不随之更新，除非不得已而用之） |  所有书源均需先注册密钥填写密钥后方可使用！</p>
-        <button onclick="window.location.href='yuedu://booksource/importonline?src=' + encodeURIComponent(window.location.href) + '/download/yueducx'">
-            其他软件兼容书源
-        </button>
-        <p>注：此书源兼容读不舍手、千阅、搜书大师，但只有核心功能，且密钥需要手动在章节列表的reader接口填写（此书源不随之更新，除非不得已而用之） |  所有书源均需先注册密钥填写密钥后方可使用！</p>
+<button onclick="downloadjianrong()">
+    其他软件兼容书源
+</button>
+<p>
+    注：此书源兼容-<span style="color: red;">读不舍手</span>、<span style="color: red;">源阅读</span>、<span style="color: red;">千阅</span>、<span style="color: red;">搜书大师</span>，但只有核心功能，且密钥需要手动在章节列表的reader接口填写（此书源不随之更新，除非不得已而用之） | 所有书源均需先注册密钥填写密钥后方可使用！
+</p>
+
     </div>
 </div>
 <div class="app-container">
@@ -1126,11 +1138,14 @@ function downloadjijian() {
 }
 
 
-function downloadyuedu() {
+function downloadsijiantao() {
     const url = '/download/yuedu';
     initiateDownload(url);
 }
-
+function downloadjianrong() {
+    const url = '/download/yueducx';
+    initiateDownload(url);
+}
 function downloadxiangse() {
     const url = '/download/xiangse';
     initiateDownload(url);
