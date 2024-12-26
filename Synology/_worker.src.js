@@ -1290,9 +1290,9 @@ async function 生成配置信息(userID, hostName, sub, UA, RproxyIP, _url, env
 			}
 			addresses = addresses.concat('127.0.0.1:1234#大灰狼自用,勿传播,无限流量中');
 			if (hostName.includes(".workers.dev")) {
-				addressesnotls = addressesnotls.concat(cfips.map(cidr => generateRandomIPFromCIDR(cidr) + '#CF随机节点'));
+				addressesnotls = addressesnotls.concat(cfips.map(cidr => generateRandomIPFromCIDR(cidr) + '#大灰狼随机节点'));
 			} else {
-				addresses = addresses.concat(cfips.map(cidr => generateRandomIPFromCIDR(cidr) + '#CF随机节点'));
+				addresses = addresses.concat(cfips.map(cidr => generateRandomIPFromCIDR(cidr) + '#大灰狼随机节点'));
 			}
 		}
 	}
