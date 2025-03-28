@@ -11,6 +11,10 @@ apt -y update && apt -y install curl wget sudo || yum install -y curl wget sudo 
 apk add curl bash
 ```
 
+V2RAYA安装
+```sh
+bash -c  "$(curl -fsSL https://cdn.jsdelivr.net/gh/shidahuilang/pve@main/v2raya.sh)"
+```
 集合脚本自用
 ```sh
 bash -c "$(curl -fsSL https://cdn.jsdelivr.net/gh/shidahuilang/pve/set.sh)"
