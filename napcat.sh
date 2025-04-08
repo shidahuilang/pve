@@ -925,8 +925,6 @@ function show_result() {
     log "内网地址: http://127.0.0.1:${webui_port}/webui"
     log "内网地址: http://${local_ip}:${webui_port}/webui"
     log "访问密钥: ${webui_token}"
-    log ""
-    log ""
     log "如果使用的是云服务器，请至安全组开放 ${webui_port} 端口"
     log ""
     log "已安装 napcat 控制脚本"
