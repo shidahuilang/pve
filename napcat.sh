@@ -21,8 +21,6 @@ cat << EOF
 ██      ███████ ██ ██  ██ ██   ███ 
 ██      ██   ██ ██  ██ ██ ██    ██ 
 ███████ ██   ██ ██   ████  ██████  
-                                   
-                                     
 EOF
 
 echo -e '\033[0m'
@@ -73,7 +71,7 @@ function check_root() {
 
 function docker_network_test() {
     docker_target_proxy=""
-    docker_proxy_arr=("docker.1panel.dev" "dockerpull.com" "docker.rainbond.cc" "dockerproxy.cn" "docker.agsvpt.work" "docker.agsv.top" "docker.registry.cyou")
+    docker_proxy_arr=("docker.langge.gq" "dockerpull.com" "docker.rainbond.cc" "dockerproxy.cn" "docker.agsvpt.work" "docker.agsv.top" "docker.registry.cyou")
 
     for docker_proxy in "${docker_proxy_arr[@]}"; do
         docker_status=$(curl -o /dev/null -s -w "%{http_code}" --max-time 10 "${docker_proxy}/")
@@ -926,7 +924,6 @@ function show_result() {
     log "内网地址: http://${local_ip}:${webui_port}/webui"
     log "访问密钥: ${webui_token}"
     log "如果使用的是云服务器，请至安全组开放 ${webui_port} 端口"
-    log ""
     log "已安装 napcat 控制脚本"
     log "请使用 ${container_name} help 获取帮助"
     log ""
