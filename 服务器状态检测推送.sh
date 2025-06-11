@@ -32,8 +32,8 @@ SERVERS_QINGTIAN=(
 
 # --- Telegram 配置 ---
 declare -A TELEGRAMS=(
-  ["162258:AAGeQmivyLJjVC5iydQkqix45tZbWyY_LGY"]="120908"
-#  ["162258:AAGeQmivyLJjVC5iydQkqix45tZbWyY_LGY"]="120908"  
+  ["162258:AAGeQmivyLJjVC5iyZbWyY_LGY"]="120908"
+#  ["162258:AAGeQmivyLJjVC5iyZbWyY_LGY"]="120908"  
 )
 
 # --- 邮箱列表 ---
