@@ -1,6 +1,23 @@
 #!/bin/bash
 
-# --- 自动安装 postfix 和 mailutils 略 ---
+# --- 自动安装并配置 postfix 和 mailutils ---
+if ! dpkg -l | grep -q "^ii\s*postfix\s"; then
+  echo "检测到 postfix 未安装，开始安装..."
+
+  HOSTNAME=$(hostname)
+  echo "postfix postfix/mailname string $HOSTNAME" | sudo debconf-set-selections
+  echo "postfix postfix/main_mailer_type string 'Internet Site'" | sudo debconf-set-selections
+
+  sudo apt-get update
+  sudo DEBIAN_FRONTEND=noninteractive apt-get install -y postfix mailutils
+
+  sudo systemctl enable postfix
+  sudo systemctl start postfix
+
+  echo "postfix 安装完成并启动"
+else
+  echo "postfix 已安装"
+fi
 
 # --- 服务器分组 ---
 SERVERS_DAHUILANG=(
@@ -116,9 +133,13 @@ check_servers SERVERS_QINGTIAN "晴天" BODY_QINGTIAN
 
 # 过滤内容（如果只推异常）
 if [ "$PUSH_ALL" != true ]; then
-  BODY_DAHUILANG=$(echo "$BODY_DAHUILANG" | grep -E '服务器检测|❌' || echo "")
-  BODY_QINGTIAN=$(echo "$BODY_QINGTIAN" | grep -E '服务器检测|❌' || echo "")
+  BODY_DAHUILANG=$(echo "$BODY_DAHUILANG" | grep -E '❌' || echo "")
+  [ -n "$BODY_DAHUILANG" ] && BODY_DAHUILANG="大灰狼 服务器异常 - $(date '+%Y-%m-%d %H:%M:%S')"$'\n'"$BODY_DAHUILANG"
+
+  BODY_QINGTIAN=$(echo "$BODY_QINGTIAN" | grep -E '❌' || echo "")
+  [ -n "$BODY_QINGTIAN" ] && BODY_QINGTIAN="晴天 服务器异常 - $(date '+%Y-%m-%d %H:%M:%S')"$'\n'"$BODY_QINGTIAN"
 fi
+
 
 # 统一日志
 echo -e "$BODY_DAHUILANG\n\n$BODY_QINGTIAN" > "$LOGFILE"
