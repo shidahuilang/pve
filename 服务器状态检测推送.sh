@@ -21,68 +21,80 @@ fi
 
 # --- 服务器分组 ---
 SERVERS_DAHUILANG=(
-  "http://vip.123:45800"
-  "https://20.456.tk"
-
+  "http://123.cf:45800"
+  "https://456.tk"
 )
 
 SERVERS_QINGTIAN=(
-  "https://api.123.com"
-  "https://v1.456.com"
-
+  "https://123.com"
+  "https://456.com"
 )
 
 # --- Telegram 配置 ---
 declare -A TELEGRAMS=(
-  ["16225853:AAGeQmivyLJjVCdQkqix45tZbWyY_LGY"]="12090858"
-#  ["1625953:AAGeQmiLJjVC5iydQk5tZbWyY_LGY"]="1209658"  
+  ["162258:AAGeQmivyLJjVC5iydQkqix45tZbWyY_LGY"]="120908"
+#  ["162258:AAGeQmivyLJjVC5iydQkqix45tZbWyY_LGY"]="120908"  
 )
 
 # --- 邮箱列表 ---
 EMAILS=(
-  "2794341@qq.com"
-  "1085124@qq.com"
+  "27943@qq.com"
+  "10852@qq.com"
 )
 
 # --- 邮件推送开关 ---
 PUSH_EMAIL=false   # true开启邮件推送，false关闭
 
 # --- QQ 群推送配置 ---
-PUSH_ALL=true  # true 推送全部状态，false 只推异常
+PUSH_ALL=false  # true 推送全部状态，false 只推异常
 
 DAHUILANG=true
 declare -A QQ_GROUPS_DAHUILANG=(
-  ["1077141"]="大灰狼vip群"
-#  ["106611"]="大灰狼1群"
-#  ["837023"]="大灰狼2群"
-#  ["1040466"]="大灰狼3群"   
+  ["10715"]="大灰狼vip群"
+#  ["1066"]="大灰狼1群"
 )
 
 PUSH_QQ_QINGTIAN=true
 declare -A QQ_GROUPS_QINGTIAN=(
-  ["415943"]="晴天vip1群"
-  ["1041031"]="晴天vip2群"
+  ["41578"]="晴天vip1群"
+  ["10456"]="晴天vip2群"
 )
 
-QQ_PUSH_URL="http://xx.xx.xxx.xxx:3001/send_group_msg"
+QQ_PUSH_URL="http://xx.xx.xx.xxx:3001/send_group_msg"
 
 LOGFILE="./server.log"
 
-# --- 检测函数（同步） ---
+check_code() {
+  local url=$1
+  local code="000"
+
+  for i in {1..3}; do
+    code=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 3 --max-time 5 "$url")
+    if [ "$code" == "200" ] || [ "$code" == "405" ]; then
+      break
+    fi
+    sleep 1
+  done
+
+  echo "$code"
+}
+
+
 check_servers() {
   local -n servers=$1
   local group_name=$2
   local body_var=$3
 
-  local body="$group_name 服务器检测 - $(date '+%Y-%m-%d %H:%M:%S')"$'\n'
+  local body=""
   for server in "${servers[@]}"; do
-    local code
-    code=$(curl -s -o /dev/null -w "%{http_code}" "$server")
-    local status
+    local code status
+    code=$(check_code "$server")
     if [ "$code" == "200" ]; then
       status="✔️ 正常"
     elif [ "$code" == "405" ]; then
       status="❌ 关闭 (405 Method Not Allowed)"
+    elif [ "$code" == "000" ]; then
+      status="❌ 无法连接 (000)"
     else
       status="❌ 关闭 (HTTP $code)"
     fi
@@ -91,6 +103,7 @@ check_servers() {
 
   printf -v "$body_var" "%s" "$body"
 }
+
 
 # --- 发送 Telegram ---
 send_telegram() {
