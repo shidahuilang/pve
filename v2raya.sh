@@ -1,7 +1,7 @@
 #!/bin/bash
 # https://github.com/shidahuilang/
 # v2rayA Module by dahuilang
-# 修复版：绕过过期 APT 签名密钥，改用 GitHub Releases 直装
+# 修复版：绕过过期 APT 签名密钥，自动配置局域网代理访问
 
 # 颜色代码
 GREEN="\e[32m"
@@ -68,7 +68,8 @@ install_v2raya() {
 
   # ===== 3. 获取最新版本号 =====
   echo -e "${YELLOW}🔍 获取 v2rayA 最新版本...${RESET}"
-  LATEST_V=$(curl -sL --retry 3 --connect-timeout 10     "https://api.github.com/repos/v2rayA/v2rayA/releases/latest" | jq -r '.tag_name')
+  LATEST_V=$(curl -sL --retry 3 --connect-timeout 10 \
+    "https://api.github.com/repos/v2rayA/v2rayA/releases/latest" | jq -r '.tag_name')
 
   if [ -z "$LATEST_V" ] || [ "$LATEST_V" = "null" ]; then
     die "无法获取 v2rayA 最新版本号，请检查网络连接"
@@ -97,21 +98,30 @@ install_v2raya() {
   # 清理下载的 deb 包
   rm -f "$DEB_PATH"
 
-  # ===== 6. 安装 V2Ray 核心 =====
+  # ===== 6. 【关键修复】配置代理端口监听 0.0.0.0 =====
+  echo -e "${YELLOW}🔧 配置代理端口允许局域网访问...${RESET}"
+  mkdir -p /etc/systemd/system/v2raya.service.d/
+  tee /etc/systemd/system/v2raya.service.d/inbound-ip.conf > /dev/null << 'EOF'
+[Service]
+Environment="V2RAYA_INBOUND_IP=0.0.0.0"
+EOF
+  systemctl daemon-reload
+
+  # ===== 7. 安装 V2Ray 核心 =====
   echo -e "${YELLOW}📦 安装 V2Ray 核心...${RESET}"
   if ! bash <(curl -L https://raw.githubusercontent.com/v2fly/fhs-install-v2ray/master/install-release.sh); then
     die "安装 V2Ray 核心失败"
   fi
 
-  # ===== 7. 启动并设置开机自启 =====
+  # ===== 8. 启动并设置开机自启 =====
   echo -e "${YELLOW}🚀 启动 V2RayA 服务...${RESET}"
-  systemctl daemon-reload
   if ! systemctl enable --now v2raya.service; then
     die "启动 v2raya.service 失败"
   fi
 
-  # ===== 8. 验证安装 =====
+  # ===== 9. 验证安装 =====
   echo -e "${YELLOW}🔍 验证安装...${RESET}"
+  sleep 2
   if systemctl is-active --quiet v2raya.service; then
     echo -e "${GREEN}✓ v2raya.service 运行正常${RESET}"
   else
@@ -125,9 +135,19 @@ install_v2raya() {
     echo -e "${RED}⚠️  V2Ray 核心可能未正确安装${RESET}"
   fi
 
+  # 验证代理端口监听
+  echo -e "${YELLOW}🔍 验证代理端口监听...${RESET}"
+  if ss -tlnp | grep -q '0.0.0.0:20171'; then
+    echo -e "${GREEN}✓ HTTP 代理端口 20171 已监听 0.0.0.0${RESET}"
+  else
+    echo -e "${YELLOW}⚠️  HTTP 代理端口可能未监听 0.0.0.0，请在面板连接节点后再次检查${RESET}"
+  fi
+
   echo -e "\n${GREEN}✅ V2RayA 和 V2Ray 安装完成！${RESET}"
-  echo -e "📢 你可以在浏览器中访问 V2RayA 控制面板: ${GREEN}http://localhost:2017${RESET}"
-  echo -e "${YELLOW}💡 如需远程访问，修改 /etc/default/v2raya 中 V2RAYA_ADDRESS=0.0.0.0:2017${RESET}"
+  echo -e "📢 控制面板: ${GREEN}http://$(hostname -I | awk '{print $1}'):2017${RESET}"
+  echo -e "📢 HTTP 代理: ${GREEN}http://$(hostname -I | awk '{print $1}'):20171${RESET}"
+  echo -e "📢 SOCKS5 代理: ${GREEN}$(hostname -I | awk '{print $1}'):20170${RESET}"
+  echo -e "${YELLOW}💡 其他服务器使用代理: export http_proxy=http://$(hostname -I | awk '{print $1}'):20171${RESET}"
 }
 
 uninstall_v2raya() {
@@ -146,6 +166,7 @@ uninstall_v2raya() {
         systemctl disable v2raya.service
       fi
       apt remove --purge -y v2raya 2>/dev/null || true
+      rm -rf /etc/systemd/system/v2raya.service.d/
       echo -e "\n${GREEN}✅ V2RayA 已卸载！${RESET}"
       ;;
     2)
@@ -163,6 +184,7 @@ uninstall_v2raya() {
       rm -f /etc/apt/sources.list.d/v2raya.list
       rm -f /etc/apt/keyrings/v2raya.asc /etc/apt/keyrings/v2raya.gpg
       rm -f /usr/share/keyrings/v2raya.asc /usr/share/keyrings/v2raya.gpg
+      rm -rf /etc/systemd/system/v2raya.service.d/
       echo -e "\n${GREEN}✅ V2RayA 和 V2Ray 已全部卸载！${RESET}"
       ;;
     4)
@@ -175,6 +197,7 @@ uninstall_v2raya() {
       rm -f /etc/apt/sources.list.d/v2raya.list
       rm -f /etc/apt/keyrings/v2raya.asc /etc/apt/keyrings/v2raya.gpg
       rm -f /usr/share/keyrings/v2raya.asc /usr/share/keyrings/v2raya.gpg
+      rm -rf /etc/systemd/system/v2raya.service.d/
       rm -rf /etc/v2raya /usr/local/etc/v2ray /etc/v2ray /var/lib/v2raya ~/.config/v2raya ~/.local/share/v2raya
       rm -rf /usr/local/bin/v2ray /usr/local/bin/v2ctl /usr/local/share/v2ray /usr/local/etc/v2ray
       rm -f /etc/systemd/system/v2ray.service /etc/systemd/system/v2ray@.service
@@ -193,7 +216,7 @@ uninstall_v2raya() {
 }
 
 # 主菜单
-echo -e "\n${BLUE}====== V2RayA & V2Ray 管理脚本 (修复版) ======${RESET}"
+echo -e "\n${BLUE}====== V2RayA & V2Ray 管理脚本 (修复版 v2) ======${RESET}"
 echo "1) 安装 V2RayA & V2Ray"
 echo "2) 卸载 V2RayA & V2Ray"
 echo "3) 退出"
