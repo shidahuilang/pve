@@ -98,7 +98,7 @@ install_v2raya() {
   # 清理下载的 deb 包
   rm -f "$DEB_PATH"
 
-  # ===== 6. 【关键修复】配置代理端口监听 0.0.0.0 =====
+  # ===== 6. 配置代理端口监听 0.0.0.0 =====
   echo -e "${YELLOW}🔧 配置代理端口允许局域网访问...${RESET}"
   mkdir -p /etc/systemd/system/v2raya.service.d/
   tee /etc/systemd/system/v2raya.service.d/inbound-ip.conf > /dev/null << 'EOF'
